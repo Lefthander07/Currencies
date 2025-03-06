@@ -7,10 +7,10 @@ public class CalendarResource
 {
 	public static readonly CalendarResource Instance = new();
 
-	public static readonly string January = GetMonthByNumber(0);
-	public static readonly string February = GetMonthByNumber(1);
+    public static string January { get; private set; }
+    public static string February { get; private set; }
 
-	private static readonly string[] MonthNames;
+    private static readonly string[] MonthNames;
 
 	static CalendarResource()
 	{
@@ -29,12 +29,25 @@ public class CalendarResource
 			"Ноябрь",
 			"Декабрь",
 		};
+		January = GetMonthByNumber(0);
+		February = GetMonthByNumber(1);
 	}
 
 	private static string GetMonthByNumber(int number)
 		=> MonthNames[number];
 
-	// ToDo: реализовать индексатор для получения названия месяца по енаму Month
+	//индексатор для получения названия месяца по енаму Month
+	public string this[Month month]
+	{
+		get
+		{
+			if ((int)month > 11)
+				throw new ArgumentOutOfRangeException(nameof(month));
+
+			return GetMonthByNumber((int)month);
+		}
+
+	}
 }
 
 public enum Month
