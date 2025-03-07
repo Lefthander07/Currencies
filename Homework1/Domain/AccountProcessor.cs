@@ -3,7 +3,7 @@
 public class AccountProcessor
 {
     //Реализация без копирования и боксинга
-    public decimal _CalculatePerformed(BankAccount bankAccount)
+    public decimal CalculatePerformed(BankAccount bankAccount)
     {
         BankOperation lastOp = bankAccount.LastOperation;
         BankOperation prevOp = bankAccount.PreviousOperation;
