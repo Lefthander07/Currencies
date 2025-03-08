@@ -58,7 +58,7 @@ public class StringInternBenchmark
 
         // Возвращаем эти строки
         yield return _words.First();
-        yield return _words[_words.Count / 2];
+        yield return _words[_words.Count - 1 / 2];
         yield return _words.Last();
 
         yield return string_from_sb1;
