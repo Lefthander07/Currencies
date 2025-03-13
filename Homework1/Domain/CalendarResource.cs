@@ -42,9 +42,12 @@ public class CalendarResource
 		get
 		{
 			if ((int)month > 11)
-				throw new ArgumentOutOfRangeException(nameof(month));
+				throw new ArgumentOutOfRangeException($"Индекс месяца не может быть больше 11, Переданное значение: {(int)month}", nameof(month));
 
-			return GetMonthByNumber((int)month);
+            if ((int)month < 0)
+                throw new ArgumentOutOfRangeException($"Индекс месяца не может быть меньше, Переданное значение: {(int)month}", nameof(month));
+
+            return GetMonthByNumber((int)month);
 		}
 
 	}

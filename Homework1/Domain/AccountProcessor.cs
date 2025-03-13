@@ -9,14 +9,14 @@ public class AccountProcessor
         BankOperation prevOp = bankAccount.PreviousOperation;
 
         return CalculateOperation(in lastOp) +
-               CalculateOperation(bankAccount.PreviousOperation) +
+               CalculateOperation(in prevOp) +
                CalculateOperation1(in lastOp) +
                CalculateOperation1(in prevOp) +
                CalculateOperation2(in lastOp) +
                CalculateOperation2(in prevOp) +
-               CalculateOperation3(lastOp) +
-               CalculateOperation3(prevOp) +
-               CalculateOperation3(bankAccount)
+               CalculateOperation3(in lastOp) +
+               CalculateOperation3(in prevOp) +
+               CalculateOperation3(in bankAccount)
                +
                CalculateOperation(in lastOp) +
                CalculateOperation(in prevOp) +
@@ -24,9 +24,9 @@ public class AccountProcessor
                CalculateOperation1(in prevOp) +
                CalculateOperation2(in lastOp) +
                CalculateOperation2(in prevOp) +
-               CalculateOperation3(lastOp) +
-               CalculateOperation3(prevOp) +
-               CalculateOperation3(bankAccount)
+               CalculateOperation3(in lastOp) +
+               CalculateOperation3(in prevOp) +
+               CalculateOperation3(in bankAccount)
                +
                CalculateOperation(in lastOp) +
                CalculateOperation(in prevOp) +
@@ -34,9 +34,9 @@ public class AccountProcessor
                CalculateOperation1(in prevOp) +
                CalculateOperation2(in lastOp) +
                CalculateOperation2(in prevOp) +
-               CalculateOperation3(lastOp) +
-               CalculateOperation3(prevOp) +
-               CalculateOperation3(bankAccount);
+               CalculateOperation3(in lastOp) +
+               CalculateOperation3(in prevOp) +
+               CalculateOperation3(in bankAccount);
     }
 
     private decimal CalculateOperation(in BankOperation bankOperation)
@@ -108,7 +108,7 @@ public class AccountProcessor
 		return bankOperation.OperationInfo2;
 	}
 
-	private decimal CalculateOperation3(ITotalAmount bankOperation)
+	private decimal CalculateOperation3<T>(in T bankOperation) where T: struct, ITotalAmount
 	{
 		// Some calculation code
 		return bankOperation.TotalAmount;
