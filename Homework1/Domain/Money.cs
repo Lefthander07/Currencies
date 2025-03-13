@@ -8,15 +8,20 @@ namespace Fuse8.BackendInternship.Domain;
 /// </summary>
 public class Money
 {
-	public Money(int rubles, int kopeks)
+    private readonly int _totalKopeks;
+
+    public Money(int rubles, int kopeks)
 		: this(false, rubles, kopeks)
 	{
 	}
 
 	public Money(bool isNegative, int rubles, int kopeks)
 	{
-        if (kopeks < 0 || kopeks > 99)
-            throw new ArgumentException("Копейки должны быть в диапазоне от 0 до 99.");
+        if (kopeks < 0)
+            throw new ArgumentException($"Копейки не могут быть отрицательными. Переданное значение: {kopeks}.", nameof(kopeks));
+
+        if (kopeks > 99)
+            throw new ArgumentException($"Копейки не могут быть больше 99. Переданное значение: {kopeks}.", nameof(kopeks));
 
         if (rubles < 0)
             throw new ArgumentException("Рубли не могут быть отрицательными.");
@@ -27,6 +32,9 @@ public class Money
         IsNegative = isNegative;
         Rubles = rubles;
         Kopeks = kopeks;
+
+        // Рассчитываем общее количество копеек с учётом знака
+        _totalKopeks = (isNegative ? -1 : 1) * (rubles * 100 + kopeks);
     }
 
 	/// <summary>
@@ -46,96 +54,50 @@ public class Money
 
     public static Money operator +(Money lhs, Money rhs)
     {
-		int lhsTotalKopeks = lhs.Rubles * 100 + lhs.Kopeks;
-		int rhsTotalKopeks = rhs.Rubles * 100 + rhs.Kopeks;
+        int totalKopeks = lhs._totalKopeks + rhs._totalKopeks;
+        bool isNegative = totalKopeks < 0;
 
-        if (lhs.IsNegative)
-            lhsTotalKopeks = -lhsTotalKopeks;
+        int newKopeks = Math.Abs(totalKopeks) % 100;
+        int newRubles = Math.Abs(totalKopeks) / 100;
 
-        if (rhs.IsNegative)
-            rhsTotalKopeks = -rhsTotalKopeks;
-
-        int Kopeks = lhsTotalKopeks + rhsTotalKopeks;
-
-        bool negative = Kopeks < 0;
-
-        int newRubles = System.Math.Abs(Kopeks) / 100;
-        int newKopeks = System.Math.Abs(Kopeks) % 100;
-
-        return new Money(negative, newRubles, newKopeks);
+        return new Money(isNegative, newRubles, newKopeks);
     }
 
     public static Money operator -(Money lhs, Money rhs)
     {
-        //допустима логика lhs - rhs = lhs + (-rhs)
-        Money newRhs;
+        int totalKopeks = lhs._totalKopeks - rhs._totalKopeks;
+        bool isNegative = totalKopeks < 0;
 
-        if (rhs.Rubles == 0 && rhs.Kopeks == 0)
-        {
-            newRhs = rhs;
-        }
-        else
-        {
-            newRhs = new Money(rhs.IsNegative ? false : true, rhs.Rubles, rhs.Kopeks);
-        }
+        int newKopeks = Math.Abs(totalKopeks) % 100;
+        int newRubles = Math.Abs(totalKopeks) / 100;
 
-        return lhs + newRhs;
+        return new Money(isNegative, newRubles, newKopeks);
 
     }
 
     public static bool operator >(Money lhs, Money rhs)
     {
-        int lhsTotals = lhs.Rubles * 100 + lhs.Kopeks;
-        lhsTotals = lhs.IsNegative ? -lhsTotals : lhsTotals;
-
-        int rhsTotals = rhs.Rubles * 100 + rhs.Kopeks;
-        rhsTotals = rhs.IsNegative ? -rhsTotals : rhsTotals;
-
-        return lhsTotals > rhsTotals;
+        return lhs._totalKopeks > rhs._totalKopeks;
     }
 
     public static bool operator >=(Money lhs, Money rhs)
     {
-        int lhsTotals = lhs.Rubles * 100 + lhs.Kopeks;
-        lhsTotals = lhs.IsNegative ? -lhsTotals : lhsTotals;
-
-        int rhsTotals = rhs.Rubles * 100 + rhs.Kopeks;
-        rhsTotals = rhs.IsNegative ? -rhsTotals : rhsTotals;
-
-        return lhsTotals >= rhsTotals;
+        return lhs._totalKopeks >= rhs._totalKopeks;
     }
 
     public static bool operator <(Money lhs, Money rhs)
     {
-        int lhsTotals = lhs.Rubles * 100 + lhs.Kopeks;
-        lhsTotals = lhs.IsNegative ? -lhsTotals : lhsTotals;
-
-        int rhsTotals = rhs.Rubles * 100 + rhs.Kopeks;
-        rhsTotals = rhs.IsNegative ? -rhsTotals : rhsTotals;
-
-        return lhsTotals < rhsTotals;
+        return lhs._totalKopeks < rhs._totalKopeks;
     }
 
     public static bool operator <=(Money lhs, Money rhs)
     {
-        int lhsTotals = lhs.Rubles * 100 + lhs.Kopeks;
-        lhsTotals = lhs.IsNegative ? -lhsTotals : lhsTotals;
-
-        int rhsTotals = rhs.Rubles * 100 + rhs.Kopeks;
-        rhsTotals = rhs.IsNegative ? -rhsTotals : rhsTotals;
-
-        return lhsTotals <= rhsTotals;
+        return lhs._totalKopeks <= rhs._totalKopeks;
     }
 
     public static bool operator ==(Money lhs, Money rhs)
     {
-        int lhsTotals = lhs.Rubles * 100 + lhs.Kopeks;
-        lhsTotals = lhs.IsNegative ? -lhsTotals : lhsTotals;
-
-        int rhsTotals = rhs.Rubles * 100 + rhs.Kopeks;
-        rhsTotals = rhs.IsNegative ? -rhsTotals : rhsTotals;
-
-        return lhsTotals == rhsTotals;
+        return lhs._totalKopeks == rhs._totalKopeks;
     }
 
     public static bool operator !=(Money lhs, Money rhs)
@@ -154,13 +116,11 @@ public class Money
 
     public override int GetHashCode()
     {
-        int totalRubles = Rubles * 100 + Kopeks;
-        totalRubles = this.IsNegative ? -totalRubles : totalRubles;
-        return totalRubles.GetHashCode();
+        return _totalKopeks.GetHashCode();
     }
 
     public override string ToString()
     {
-        return $"{Rubles},{Kopeks:D2}";
+        return $"{(IsNegative ? "-" : "")}{Rubles},{Kopeks:D2}";
     }
 }
