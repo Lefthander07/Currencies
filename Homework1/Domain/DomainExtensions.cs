@@ -16,7 +16,7 @@ public static class DomainExtensions
 		return string.Join(separator, value);
 	}
 
-	public static int DaysCountBetweem(this DateTimeOffset StartDate, DateTimeOffset EndDate)
+	public static int DaysCountBetween(this DateTimeOffset StartDate, DateTimeOffset EndDate)
 	{
 		return Math.Abs((EndDate - StartDate).Days);
 	}
