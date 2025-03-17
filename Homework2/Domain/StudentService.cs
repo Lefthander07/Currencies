@@ -1,4 +1,6 @@
-﻿namespace Fuse8.BackendInternship.Domain;
+﻿using System.Reflection.Metadata.Ecma335;
+
+namespace Fuse8.BackendInternship.Domain;
 
 public class StudentService
 {
@@ -16,10 +18,19 @@ public class StudentService
     /// </returns>
     public static string[] GetBestStudentsFullName(Student[] students, TestTaskResult[] testTaskResults)
     {
-        // TODO: реализовать логику с использованием LINQ без создания дополнительных коллекций (HashSet и т.д.)
-
         const int stateFundedStudentQuantity = 5;
-        return Array.Empty<string>();
+        var result =
+            from student in students
+            join studentResult in testTaskResults on student.Id equals studentResult.StudentId
+            orderby studentResult.GradeSum descending, studentResult.PassedAt ascending
+            select new
+            {
+                FullName = student.FirstName + " " + student.LastName,
+                studentResult.GradeSum
+            };
+
+        var topStudents = result.Take(stateFundedStudentQuantity);
+        return topStudents.Select(x => x.FullName).ToArray();
     }
 
     /// <summary>
@@ -37,9 +48,22 @@ public class StudentService
     /// </returns>
     public static StudentFullInfoModel[] GetStudentsFullInfo(Student[] students, TestTaskResult[] testTaskResults, Group[] groups)
     {
-        // TODO: реализовать логику с использованием LINQ без создания дополнительных коллекций (HashSet и т.д.)
-
-        return Array.Empty<StudentFullInfoModel>();
+        var result = from student in students
+                     join studentsGroup in groups on student.GroupId equals studentsGroup.Id into studentGroup
+                     from _group in studentGroup.DefaultIfEmpty()
+                     join testResult in testTaskResults on student.Id equals testResult.StudentId into studentTesResults
+                     from testResult in studentTesResults.DefaultIfEmpty()
+                     select new StudentFullInfoModel
+                     {
+                         StudentId = student.Id,
+                         FirstName = student.FirstName,
+                         LastName = student.LastName,
+                         TestTaskGradeSum = testResult?.GradeSum,
+                         TestTaskPassedAt = testResult?.PassedAt,
+                         GroupId = _group.Id,
+                         GroupName = _group.GroupName
+                     };
+        return result.ToArray();
     }
 
     /// <summary>
@@ -58,8 +82,19 @@ public class StudentService
     public static Dictionary<string, string> GetBestStudentsByGroup(StudentFullInfoModel[] students)
     {
         // TODO: реализовать логику с использованием LINQ без создания дополнительных коллекций (HashSet и т.д.)
-
-        return new Dictionary<string, string>();
+        var topStudentInGroups = students.Where(student => student.TestTaskGradeSum.HasValue)
+            .GroupBy(student => student.GroupName).ToDictionary(
+                 group => group.Key,
+                 group => group
+                    .OrderByDescending(student => student.TestTaskGradeSum) 
+                    .ThenBy(student => student.TestTaskPassedAt) 
+                    .First().FirstName + 
+                        " "     //возможно, можно как-то более по-умному получить фамилию....
+                    + group.OrderByDescending(student => student.TestTaskGradeSum)
+                    .ThenBy(student => student.TestTaskPassedAt)
+                    .First().LastName
+        );
+        return topStudentInGroups;
     }
 
     /// <summary>
@@ -76,8 +111,12 @@ public class StudentService
     public static string[] GetStudentsWithSameNames(Student[] studentsFromFirstGroup, Student[] studentsFromSecondGroup)
     {
         // TODO: реализовать логику с использованием LINQ без создания дополнительных коллекций (HashSet и т.д.)
-
-        return Array.Empty<string>();
+        var names = studentsFromFirstGroup
+            .Select(student => student.FirstName)
+            .Intersect(studentsFromSecondGroup.Select(student => student.FirstName)) //используем пересечение двух множест имен
+            .Distinct()
+            .ToArray();
+        return names;
     }
 
     /// <summary>
@@ -94,8 +133,18 @@ public class StudentService
     public static string[] GetAllUniqueStudentNames(Student[] studentsFromFirstGroup, Student[] studentsFromSecondGroup)
     {
         // TODO: реализовать логику. Из LINQ операторов можно использовать только "Select". Можно использовать дополнительные коллекции (HashSet и т.д.)
+        var setOfNames = new HashSet<string>();
+        foreach (var student in studentsFromFirstGroup)
+        {
+            setOfNames.Add(student.FirstName);
+        }
 
-        return Array.Empty<string>();
+        foreach (var student in studentsFromSecondGroup)
+        {
+            setOfNames.Add(student.FirstName);
+        }
+
+        return setOfNames.ToArray();
     }
 
     /// <summary>
@@ -109,8 +158,11 @@ public class StudentService
     public static string[] GetAllStudentNames(GroupWithStudents[] groupWithStudents)
     {
         // TODO: реализовать логику с использованием LINQ без создания дополнительных коллекций (HashSet и т.д.)
+        var Names = groupWithStudents
+            .SelectMany(group => group.Students)
+            .Select(student => $"{student.FirstName} {student.LastName}").ToArray();
 
-        return Array.Empty<string>();
+        return Names;
     }
 }
 

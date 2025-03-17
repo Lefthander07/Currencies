@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Security.AccessControl;
 
 namespace Fuse8.BackendInternship.Domain;
 
@@ -14,29 +15,48 @@ public static class AssemblyHelpers
 	/// <returns>Список типов с количеством наследников</returns>
 	public static (string BaseTypeName, int InheritorCount)[] GetTypesWithInheritors()
 	{
-		// Получаем все классы из текущей Assembly
-		var assemblyClassTypes = Assembly.GetAssembly(typeof(AssemblyHelpers))
-			!.DefinedTypes
-			.Where(p => p.IsClass);
+        var assemblyClassTypes = Assembly.GetAssembly(typeof(AssemblyHelpers))
+        !.DefinedTypes
+        .Where(p => p.IsClass && p.Namespace != null && p.Namespace.StartsWith("Fuse8.BackendInternship.Domain")).ToList();
 
-		// ToDo: Добавить реализацию
-		throw new NotImplementedException();
-	}
+        var baseTypes = new Dictionary<Type, List<Type>>();
+		foreach (var type in assemblyClassTypes)
+		{
+            if (type.IsAbstract)
+            {
+                continue; //скипаем если тип является абстрактным и от него нелья создать экземпляр
+            }
+                var baseType = GetBaseType(type);
+            if (baseType != null && baseType.Namespace != null && baseType.Namespace.StartsWith("Fuse8.BackendInternship.Domain"))
+			{
+                    if (!baseTypes.ContainsKey(baseType))
+                    {
+                        baseTypes[baseType] = new List<Type>();
+                    }
+                    baseTypes[baseType].Add(type);
+            }
+        }
 
-	/// <summary>
-	/// Получает базовый тип для класса
-	/// </summary>
-	/// <param name="type">Тип, для которого необходимо получить базовый тип</param>
-	/// <returns>
-	/// Первый тип в цепочке наследований. Если наследования нет, возвращает null
-	/// </returns>
-	/// <example>
-	/// Класс A, наследуется от B, B наследуется от C
-	/// При вызове GetBaseType(typeof(A)) вернется C
-	/// При вызове GetBaseType(typeof(B)) вернется C
-	/// При вызове GetBaseType(typeof(C)) вернется C
-	/// </example>
-	private static Type? GetBaseType(Type type)
+        // Формируем результат — кортежи с базовыми типами и количеством их наследников
+        return baseTypes
+            .Select(entry => (entry.Key.Name, entry.Value.Count))
+            .ToArray();
+    }
+
+    /// <summary>
+    /// Получает базовый тип для класса
+    /// </summary>
+    /// <param name="type">Тип, для которого необходимо получить базовый тип</param>
+    /// <returns>
+    /// Первый тип в цепочке наследований. Если наследования нет, возвращает null
+    /// </returns>
+    /// <example>
+    /// Класс A, наследуется от B, B наследуется от C
+    /// При вызове GetBaseType(typeof(A)) вернется C
+    /// При вызове GetBaseType(typeof(B)) вернется C
+    /// При вызове GetBaseType(typeof(C)) вернется C
+    /// </example>
+    private static Type? GetBaseType(Type type)
 	{
 		var baseType = type;
 

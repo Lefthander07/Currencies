@@ -5,7 +5,28 @@
 /// </summary>
 public class Lazy<TValue>
 {
-	// ToDo: Реализовать ленивое получение значение при первом обращении к Value
+	private readonly Func<TValue>? _act;
+    private bool _isLazy = false;
+    private TValue? _value;
+    // ToDo: Реализовать ленивое получение значение при первом обращении к Value
 
-	public TValue? Value { get; }
+    public Lazy(Func<TValue>? act)
+    {
+        if(act == null)
+            throw new ArgumentNullException(nameof(act));
+        _act = act;
+    }
+
+    public TValue? Value
+    {
+        get
+        {
+            if (!_isLazy)
+            {
+                _value = _act();
+                _isLazy = true; 
+            }
+            return _value; 
+        }
+    }
 }

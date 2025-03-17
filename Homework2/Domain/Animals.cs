@@ -28,6 +28,12 @@ public abstract class Animal
 /// </summary>
 public abstract class Dog : Animal
 {
+	public override bool IsHumanFriend => true;
+
+    public override string WhatDoesSay()
+	{
+		return "гав";
+	}
 }
 
 /// <summary>
@@ -35,6 +41,11 @@ public abstract class Dog : Animal
 /// </summary>
 public class Fox : Animal
 {
+	public override string WhatDoesSay()
+	{
+			return "ми-ми-ми";
+	}
+	public override bool HasBigWeight => false;
 }
 
 /// <summary>
@@ -42,6 +53,7 @@ public class Fox : Animal
 /// </summary>
 public class Chihuahua : Dog
 {
+    public override bool HasBigWeight => false;
 }
 
 /// <summary>
@@ -49,4 +61,10 @@ public class Chihuahua : Dog
 /// </summary>
 public class Husky : Dog
 {
+    new public string WhatDoesSay()
+    {
+        return "ауф";
+    }
+
+	public override bool HasBigWeight => true;
 }

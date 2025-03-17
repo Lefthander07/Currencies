@@ -12,8 +12,37 @@ public static class ExceptionHandler
 	public static string? Handle(Action action)
 	{
 		// ToDo: Реализовать обработку исключений
-		action();
-		return "Ok";
+		try
+		{
+			action();
+		}
+        catch (NotValidKopekCountException)
+        {
+            return "Количество копеек должно быть больше 0 и меньше 99";
+        }
+        catch (NegativeRubleCountException)
+        {
+            return "Число рублей не может быть отрицательным";
+        }
+        catch (MoneyException e)
+		{
+			return e.Message;
+		}
+		catch(HttpRequestException e)
+		{
+            if (e.StatusCode == HttpStatusCode.NotFound)
+            {
+                return "Ресурс не найден";
+            }
+            return e.StatusCode.ToString();
+        }
+
+		catch (Exception)
+        {
+			return "Произошла непредвиденная ошибка";
+
+        }
+		return null;
 	}
 }
 
