@@ -61,7 +61,7 @@ public class Chihuahua : Dog
 /// </summary>
 public class Husky : Dog
 {
-    new public string WhatDoesSay()
+    public new string WhatDoesSay()
     {
         return "ауф";
     }

@@ -17,17 +17,13 @@ public static class AssemblyHelpers
 	{
         var assemblyClassTypes = Assembly.GetAssembly(typeof(AssemblyHelpers))
         !.DefinedTypes
-        .Where(p => p.IsClass && p.Namespace != null && p.Namespace.StartsWith("Fuse8.BackendInternship.Domain")).ToList();
+        .Where(p => p.IsClass && p.Namespace == typeof(AssemblyHelpers).Namespace && !p.IsAbstract).ToArray();
 
         var baseTypes = new Dictionary<Type, List<Type>>();
 		foreach (var type in assemblyClassTypes)
 		{
-            if (type.IsAbstract)
-            {
-                continue; //скипаем если тип является абстрактным и от него нелья создать экземпляр
-            }
                 var baseType = GetBaseType(type);
-            if (baseType != null && baseType.Namespace != null && baseType.Namespace.StartsWith("Fuse8.BackendInternship.Domain"))
+            if (baseType != null && baseType.Namespace == typeof(AssemblyHelpers).Namespace)
 			{
                     if (!baseTypes.ContainsKey(baseType))
                     {

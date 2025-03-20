@@ -22,7 +22,7 @@ public class StudentService
         var result =
             from student in students
             join studentResult in testTaskResults on student.Id equals studentResult.StudentId
-            orderby studentResult.GradeSum descending, studentResult.PassedAt ascending
+            orderby studentResult.GradeSum descending, studentResult.PassedAt
             select new
             {
                 FullName = student.FirstName + " " + student.LastName,
@@ -49,8 +49,7 @@ public class StudentService
     public static StudentFullInfoModel[] GetStudentsFullInfo(Student[] students, TestTaskResult[] testTaskResults, Group[] groups)
     {
         var result = from student in students
-                     join studentsGroup in groups on student.GroupId equals studentsGroup.Id into studentGroup
-                     from _group in studentGroup.DefaultIfEmpty()
+                     join studentsGroup in groups on student.GroupId equals studentsGroup.Id
                      join testResult in testTaskResults on student.Id equals testResult.StudentId into studentTesResults
                      from testResult in studentTesResults.DefaultIfEmpty()
                      select new StudentFullInfoModel
@@ -60,8 +59,8 @@ public class StudentService
                          LastName = student.LastName,
                          TestTaskGradeSum = testResult?.GradeSum,
                          TestTaskPassedAt = testResult?.PassedAt,
-                         GroupId = _group.Id,
-                         GroupName = _group.GroupName
+                         GroupId = studentsGroup.Id,
+                         GroupName = studentsGroup.GroupName
                      };
         return result.ToArray();
     }
@@ -83,16 +82,17 @@ public class StudentService
     {
         // TODO: реализовать логику с использованием LINQ без создания дополнительных коллекций (HashSet и т.д.)
         var topStudentInGroups = students.Where(student => student.TestTaskGradeSum.HasValue)
-            .GroupBy(student => student.GroupName).ToDictionary(
-                 group => group.Key,
-                 group => group
-                    .OrderByDescending(student => student.TestTaskGradeSum) 
-                    .ThenBy(student => student.TestTaskPassedAt) 
-                    .First().FirstName + 
-                        " "     //возможно, можно как-то более по-умному получить фамилию....
-                    + group.OrderByDescending(student => student.TestTaskGradeSum)
-                    .ThenBy(student => student.TestTaskPassedAt)
-                    .First().LastName
+            .GroupBy(student => new { student.GroupId, student.GroupName }).ToDictionary(
+                 group => group.Key.GroupName,
+                group =>
+                {
+                    var student = group
+                        .OrderByDescending(student => student.TestTaskGradeSum)
+                        .ThenBy(student => student.TestTaskPassedAt)
+                        .First();
+
+                    return $"{student.FirstName} {student.LastName}";
+                }
         );
         return topStudentInGroups;
     }
@@ -111,12 +111,10 @@ public class StudentService
     public static string[] GetStudentsWithSameNames(Student[] studentsFromFirstGroup, Student[] studentsFromSecondGroup)
     {
         // TODO: реализовать логику с использованием LINQ без создания дополнительных коллекций (HashSet и т.д.)
-        var names = studentsFromFirstGroup
+        return studentsFromFirstGroup
             .Select(student => student.FirstName)
-            .Intersect(studentsFromSecondGroup.Select(student => student.FirstName)) //используем пересечение двух множест имен
-            .Distinct()
+            .Intersect(studentsFromSecondGroup.Select(student => student.FirstName), StringComparer.OrdinalIgnoreCase) //используем пересечение двух множест имен
             .ToArray();
-        return names;
     }
 
     /// <summary>
@@ -133,11 +131,7 @@ public class StudentService
     public static string[] GetAllUniqueStudentNames(Student[] studentsFromFirstGroup, Student[] studentsFromSecondGroup)
     {
         // TODO: реализовать логику. Из LINQ операторов можно использовать только "Select". Можно использовать дополнительные коллекции (HashSet и т.д.)
-        var setOfNames = new HashSet<string>();
-        foreach (var student in studentsFromFirstGroup)
-        {
-            setOfNames.Add(student.FirstName);
-        }
+        var setOfNames = studentsFromFirstGroup.Select(p => p.FirstName).ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         foreach (var student in studentsFromSecondGroup)
         {

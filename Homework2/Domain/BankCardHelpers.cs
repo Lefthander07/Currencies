@@ -12,7 +12,9 @@ public static class BankCardHelpers
 	public static string GetUnmaskedCardNumber(BankCard card)
 	{
 		//С помощью рефлексии получам номер карты без маски
-		FieldInfo? fieldInfo = typeof(BankCard).GetField("_number", BindingFlags.Instance | BindingFlags.NonPublic);
+		const string NameOfField = "_number";
+
+		FieldInfo? fieldInfo = typeof(BankCard).GetField(NameOfField, BindingFlags.Instance | BindingFlags.NonPublic);
 
 		if (fieldInfo == null)
 		{
@@ -20,8 +22,7 @@ public static class BankCardHelpers
 
 		}
 
-		string? UnmaskedCardNumber = fieldInfo.GetValue(card) as string;
-		if (UnmaskedCardNumber == null) {
+		if (fieldInfo.GetValue(card) is not string UnmaskedCardNumber) {
 			throw new InvalidOperationException("Поле _number null");
 		}
 
