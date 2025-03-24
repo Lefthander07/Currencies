@@ -27,18 +27,17 @@ public class CurrencyService
             throw new ApiRequestLimitException("Request limit exceeded.");
         }
 
-        // Формируем дату, если она передана
+
         string url;
         if (date.HasValue)
         {
-            // Исторические данные
             url = $"{_baseUrl}/historical?currencies={defaultCurrency}&date={date.Value:yyyy-MM-dd}&base_currency={baseCurrency}&apikey={_apiKey}";
         }
         else
         {
-            // Актуальные данные
             url = $"{_baseUrl}/latest?currencies={defaultCurrency}&base_currency={baseCurrency}&apikey={_apiKey}";
         }
+
         var response = await _httpClient.GetAsync(url);
 
         if (!response.IsSuccessStatusCode)
@@ -47,7 +46,6 @@ public class CurrencyService
             {
                 throw new CurrencyNotFoundException("Неизвестная baseCurrency");
             }
-
             throw new BadHttpRequestException("Ошибка получения данных");
         }
 

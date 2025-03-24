@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
-
-
+namespace Fuse8.BackendInternship.PublicApi
+{
     /// <summary>
     /// Ответ от API валют с метаданными и данными о валюте.
     /// </summary>
@@ -49,4 +49,5 @@
         /// </summary>
         public decimal Value { get; set; }
     }
+}
 

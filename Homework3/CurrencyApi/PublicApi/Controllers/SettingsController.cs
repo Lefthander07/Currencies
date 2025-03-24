@@ -1,5 +1,4 @@
-﻿using Fuse8.BackendInternship.PublicApi;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
 namespace Fuse8.BackendInternship.PublicApi.Controllers
