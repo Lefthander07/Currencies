@@ -13,17 +13,15 @@ public static class BankCardHelpers
 	{
 		//С помощью рефлексии получам номер карты без маски
 		const string NameOfField = "_number";
-
 		FieldInfo? fieldInfo = typeof(BankCard).GetField(NameOfField, BindingFlags.Instance | BindingFlags.NonPublic);
 
 		if (fieldInfo == null)
 		{
-			throw new InvalidOperationException("Поле _number отсутствует");
-
+			throw new InvalidOperationException($"Поле {NameOfField} отсутствует");
 		}
 
 		if (fieldInfo.GetValue(card) is not string UnmaskedCardNumber) {
-			throw new InvalidOperationException("Поле _number null");
+			throw new InvalidOperationException($"Поле {NameOfField} содержит null");
 		}
 
 		return UnmaskedCardNumber;
