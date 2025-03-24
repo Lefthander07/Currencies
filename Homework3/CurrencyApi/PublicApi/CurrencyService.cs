@@ -26,7 +26,6 @@ public class CurrencyService
             throw new ApiRequestLimitException("Request limit exceeded.");
         }
 
-
         string url;
         if (date.HasValue)
         {
@@ -69,9 +68,7 @@ public class CurrencyService
             var contentjson = await response.Content.ReadFromJsonAsync<JsonResponse>();
             return contentjson;
         }
-
         throw new BadHttpRequestException("Не удалось получить статус");
-        
     }
 }
 
