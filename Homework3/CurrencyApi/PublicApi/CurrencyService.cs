@@ -17,7 +17,6 @@ public class CurrencyService
         _configuration = configuration;
         _apiKey = _configuration.Value.API_KEY;
         _baseUrl = _configuration.Value.BaseUrl;
-        _configuration = configuration;
     }
     public async Task<CurrencyApiResponse> GetCurrencyDataAsync(string baseCurrency, string defaultCurrency, DateTime? date = null)
     {
