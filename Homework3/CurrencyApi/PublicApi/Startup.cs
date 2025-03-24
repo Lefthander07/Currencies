@@ -1,4 +1,8 @@
-﻿using System.Text.Json.Serialization;
+﻿using Audit.Http;
+using Audit.Core;
+using System.Text.Json.Serialization;
+using System.Reflection;
+using Microsoft.OpenApi.Models;
 
 namespace Fuse8.BackendInternship.PublicApi;
 
@@ -9,24 +13,70 @@ public class Startup
 	public Startup(IConfiguration configuration)
 	{
 		_configuration = configuration;
+		Console.WriteLine(configuration["API_KEY"]);
 	}
 
 	public void ConfigureServices(IServiceCollection services)
 	{
-		services.AddControllers()
-
+		services.AddControllers(options =>
+        {
+            // Добавляем глобальный фильтр для обработки исключений
+            options.Filters.Add<CurrencyExceptionFilter>();
+        })
 			// Добавляем глобальные настройки для преобразования Json
-			.AddJsonOptions(
-				options =>
-				{
-					// Добавляем конвертер для енама
-					// По умолчанию енам преобразуется в цифровое значение
-					// Этим конвертером задаем перевод в строковое значение
-					options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-				});
+		.AddJsonOptions(
+		options =>
+		{
+			// Добавляем конвертер для енама
+			// По умолчанию енам преобразуется в цифровое значение
+			// Этим конвертером задаем перевод в строковое значение
+			options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+		});
+
+        services.AddControllers(options =>
+        {
+            options.Filters.Add<CurrencyExceptionFilter>();
+        });
+
+		var section = _configuration.GetRequiredSection("currency");
+		services.Configure<CurrencySettings>(section);
+
+
+
+        services.AddHttpClient<CurrencyService>()
+			.AddAuditHandler(
+			audit => audit.
+			IncludeRequestHeaders().
+			IncludeRequestBody().
+			IncludeResponseBody().
+			IncludeResponseHeaders().
+			IncludeContentHeaders());
+
 
 		services.AddEndpointsApiExplorer();
-		services.AddSwaggerGen();
+		services.AddSwaggerGen(
+			с =>
+			{
+				с.SwaggerDoc(
+					"v1",
+					new OpenApiInfo()
+					{
+						Title = "CurrencyAPI",
+						Version = "v1",
+						Description = "API для получения курса валют с внешнего сервиса"
+					});
+			с.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, $"{typeof(Program).Assembly.GetName().Name}.xml"), true);
+
+
+            });
+
+		Configuration.Setup()
+		.UseFileLogProvider(config => config
+		.Directory("logs") // Логировать в папку logs/
+		.FilenameBuilder(ev => $"audit-{DateTime.UtcNow:yyyy-MM-dd}.json"));
+
+
+
 	}
 
 	public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -36,8 +86,8 @@ public class Startup
 			app.UseSwagger();
 			app.UseSwaggerUI();
 		}
-
-		app.UseRouting()
+        app.UseMiddleware<RequestLogging>();
+        app.UseRouting()
 			.UseEndpoints(endpoints => endpoints.MapControllers());
 	}
 }
