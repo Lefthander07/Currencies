@@ -30,12 +30,6 @@ public record ApiRateLimits
     /// </summary>
     [JsonPropertyName("month")]
     public ApiQuota? MonthlyLimit { get; init; }
-
-    /// <summary>
-    /// Лимиты запросов в льготном периоде (обычно не используется, значения нулевые).
-    /// </summary>
-    [JsonPropertyName("grace")]
-    public ApiQuota? GracePeriodLimit { get; init; }
 }
 
 /// <summary>
