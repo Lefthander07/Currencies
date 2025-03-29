@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Fuse8.BackendInternship.PublicApi.Models.Configurations;
+using Fuse8.BackendInternship.PublicApi.Models.ExternalApi;
+using Fuse8.BackendInternship.PublicApi.Models.Responses;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using System.Globalization;
 
 namespace Fuse8.BackendInternship.PublicApi.Controllers
 {
@@ -12,12 +14,17 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
     public class CurrencyController : ControllerBase
     {
         private readonly CurrencyService _currencyService;
-        private readonly IOptionsSnapshot<CurrencySettings> _configuration;
+        private readonly CurrencySettigns _configuration;
 
-        public CurrencyController(CurrencyService currencyService, IOptionsSnapshot<CurrencySettings> configuration)
+        public CurrencyController(CurrencyService currencyService, IOptionsSnapshot<CurrencySettigns> configuration)
         {
             _currencyService = currencyService;
-            _configuration = configuration;
+            _configuration = configuration.Value;
+        }
+
+        private decimal RoundCurrencyValue(decimal value, int roundDigits)
+        {
+            return Math.Round(value, roundDigits);
         }
 
         /// <summary>
@@ -29,17 +36,21 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         /// <response code="429">Возвращает ошибку, если число доступных запросов превысило лимит.</response>
         /// <response code="500">Возвращает ошибку, если произошла другая неизвестная ошибка.</response>
         [HttpGet]
-        public async Task<CurrencyData> GetCurrencyRate()
+        [ProducesResponseType(typeof(CurrencyCurrentResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status429TooManyRequests)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+        public async Task<CurrencyCurrentResponse> GetCurrencyRate(CancellationToken token)
         {
-            string defaultCurrency = _configuration.Value.DefaultCurrency;
-            string baseCurrency = _configuration.Value.BaseCurrency;
-            CurrencyApiResponse apiResponse = await _currencyService.GetCurrencyDataAsync(baseCurrency, defaultCurrency);
+            string defaultCurrency = _configuration.DefaultCurrency;
+            string baseCurrency = _configuration.BaseCurrency;
+            CurrencyApiResponse apiResponse = await _currencyService.GetCurrencyDataAsync(baseCurrency, defaultCurrency, null, token);
 
-            int roundDigits = _configuration.Value.CurrencyRoundCount;
-            return new CurrencyData
+            int roundDigits = _configuration.CurrencyRoundCount;
+            return new CurrencyCurrentResponse
             {
                 Code = defaultCurrency,
-                Value = Math.Round(apiResponse.Data[defaultCurrency].Value, roundDigits)
+                Value = RoundCurrencyValue(apiResponse.Data[defaultCurrency].Value, roundDigits)
             };
         }
 
@@ -52,19 +63,22 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         /// <response code="404">Возвращает ошибку, если передана некорректная валюта.</response>
         /// <response code="429">Возвращает ошибку, если число доступных запросов превысило лимит.</response>
         /// <response code="500">Возвращает ошибку, если произошла другая неизвестная ошибка.</response>
-        [HttpGet]
-        [Route("{code}")]
-        public async Task<CurrencyData> GetCurrencyRateByCode(string code)
+        [HttpGet("{code}")]
+        [ProducesResponseType(typeof(CurrencyCurrentResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status429TooManyRequests)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+        public async Task<CurrencyCurrentResponse> GetCurrencyRateByCode([FromRoute] string code)
         {
             string defaultCurrency = code;
-            string baseCurrency = _configuration.Value.BaseCurrency;
+            string baseCurrency = _configuration.BaseCurrency;
             CurrencyApiResponse apiResponse = await _currencyService.GetCurrencyDataAsync(baseCurrency, defaultCurrency);
 
-            int roundDigits = _configuration.Value.CurrencyRoundCount;
-            return new CurrencyData
+            int roundDigits = _configuration.CurrencyRoundCount;
+            return new CurrencyCurrentResponse
             {
                 Code = defaultCurrency,
-                Value = Math.Round(apiResponse.Data[defaultCurrency].Value, roundDigits)
+                Value = RoundCurrencyValue(apiResponse.Data[defaultCurrency].Value, roundDigits)
             };
         }
 
@@ -80,24 +94,23 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         /// <response code="429">Возвращает ошибку, если число доступных запросов превысило лимит.</response>
         /// <response code="500">Возвращает ошибку, если произошла другая неизвестная ошибка.</response>
         [HttpGet("{code}/{date}")]
-        public async Task<CurrencyData> GetCurrencyRateByDate(string code, string date)
+        [ProducesResponseType(typeof(CurrencyHistoricalResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status429TooManyRequests)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+        public async Task<CurrencyHistoricalResponse> GetCurrencyRateByDate([FromRoute] string code, [FromRoute] DateOnly date, CancellationToken token = default)
         {
-            if (!DateTime.TryParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDate))
-            {
-                throw new BadHttpRequestException($"Некорректная дата {date}. Формат yyyy-MM-dd");
-            }
-
             string defaultCurrency = code;
-            string baseCurrency = _configuration.Value.BaseCurrency;
+            string baseCurrency = _configuration.BaseCurrency;
 
-            CurrencyApiResponse apiResponse = await _currencyService.GetCurrencyDataAsync(baseCurrency, defaultCurrency, parsedDate);
-            int roundDigits = _configuration.Value.CurrencyRoundCount;
+            CurrencyApiResponse apiResponse = await _currencyService.GetCurrencyDataAsync(baseCurrency, defaultCurrency, date.ToString(), token);
+            int roundDigits = _configuration.CurrencyRoundCount;
             
-            return new CurrencyData
+            return new CurrencyHistoricalResponse
             {
-                Date = date,
+                Date = date.ToString("yyyy-MM-dd"),
                 Code = defaultCurrency,
-                Value = Math.Round(apiResponse.Data[defaultCurrency].Value, roundDigits)
+                Value = RoundCurrencyValue(apiResponse.Data[defaultCurrency].Value, roundDigits)
             };
         }
     }

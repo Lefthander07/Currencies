@@ -1,11 +1,11 @@
-﻿namespace Fuse8.BackendInternship.PublicApi
+﻿namespace Fuse8.BackendInternship.PublicApi.Middlewares
 {
-    public class RequestLogging
+    public class RequestLoggingMiddleware
     {
         private readonly RequestDelegate _next;
-        private readonly ILogger<RequestLogging> _logger;
+        private readonly ILogger<RequestLoggingMiddleware> _logger;
 
-        public RequestLogging(RequestDelegate next, ILogger<RequestLogging> logger)
+        public RequestLoggingMiddleware(RequestDelegate next, ILogger<RequestLoggingMiddleware> logger)
         {
             _next = next;
             _logger = logger;
@@ -23,6 +23,7 @@
             }
 
             await _next(httpContext);
+            _logger.LogInformation("Response Status Code: {StatusCode}", httpContext.Response.StatusCode);
         }
     }
 }

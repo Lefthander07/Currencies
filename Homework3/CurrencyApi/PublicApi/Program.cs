@@ -1,9 +1,11 @@
 using Fuse8.BackendInternship.PublicApi;
 using Microsoft.AspNetCore;
+using Serilog;
 
-var webHost = WebHost
+var webHost = Host
 	.CreateDefaultBuilder(args)
-	.UseStartup<Startup>()
+    .ConfigureWebHostDefaults(webHostBuilder => webHostBuilder.UseStartup<Startup>())
+	.UseSerilog()
 	.Build();
 
 await webHost.RunAsync();

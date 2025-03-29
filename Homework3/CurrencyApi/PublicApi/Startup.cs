@@ -1,9 +1,14 @@
 ﻿using Audit.Http;
 using Audit.Core;
 using System.Text.Json.Serialization;
-using System.Reflection;
 using Microsoft.OpenApi.Models;
 using Serilog;
+using Polly;
+using Polly.Extensions.Http;
+using Fuse8.BackendInternship.PublicApi.ModelBinders;
+using Fuse8.BackendInternship.PublicApi.JsonConverters;
+using Fuse8.BackendInternship.PublicApi.Middlewares;
+using Fuse8.BackendInternship.PublicApi.Models.Configurations;
 
 namespace Fuse8.BackendInternship.PublicApi;
 
@@ -14,7 +19,6 @@ public class Startup
 	public Startup(IConfiguration configuration)
 	{
 		_configuration = configuration;
-		Console.WriteLine(configuration["API_KEY"]);
 	}
 
 	public void ConfigureServices(IServiceCollection services)
@@ -34,15 +38,32 @@ public class Startup
 			options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
 		});
 
-		services.AddControllers(options =>
-		{
-			options.Filters.Add<CurrencyExceptionFilter>();
-		});
+        services.AddOptions<CurrencyHttpApiSettings>()
+            .Bind(_configuration.GetSection("CurrencyHttpApi"))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
 
-		var section = _configuration.GetRequiredSection("currency");
-		services.Configure<CurrencySettings>(section);
+		services.AddOptions<CurrencySettigns>()
+			.Bind(_configuration.GetSection("Currency"))
+			.ValidateDataAnnotations()
+			.ValidateOnStart();
 
 		services.AddHttpClient<CurrencyService>()
+			.AddPolicyHandler(HttpPolicyExtensions
+			// Настраиваем повторный запрос при получении ошибок сервера (HTTP-код = 5XX) и для таймаута выполнения запроса (HTTP-код = 408)
+				.HandleTransientHttpError()
+				.WaitAndRetryAsync(
+					retryCount: 3,
+					sleepDurationProvider: retryAttempt =>
+					{
+					// Настраиваем экспоненциальную задержку для отправки повторного запроса при ошибке
+					// 1-я попытка будет выполнена через 1 сек
+					// 2-я - через 3 сек
+					// 3-я - через 7 сек
+						return TimeSpan.FromSeconds(Math.Pow(2, retryAttempt) - 1);
+					}));
+
+        services.AddHttpClient<CurrencyService>()
 			.AddAuditHandler(audit => audit.
 			IncludeRequestHeaders().
 			IncludeRequestBody().
@@ -54,22 +75,54 @@ public class Startup
             .WriteTo.File("logs/audit.json", rollingInterval: RollingInterval.Day)
             .CreateLogger();
 
-        Configuration.Setup()
-			.UseSerilog(
-			config => config.Message(
-			auditEvent =>
-			{
-				if (auditEvent is AuditEventHttpClient httpClientEvent)
+        _ = Configuration.Setup()
+            .UseSerilog(
+            config => config.Message(
+            auditEvent =>
+            {
+                if (auditEvent is AuditEventHttpClient httpClientEvent)
                 {
-					var contentBody = httpClientEvent.Action?.Response?.Content?.Body;
-					if (contentBody is string { Length: > 1000 } stringBody)
-					{
-						httpClientEvent.Action.Response.Content.Body = stringBody[..1000] + "<...>";
-					}
-				}
-				//Log.Information(auditEvent.ToJson());
-				return auditEvent.ToJson();
-			}));
+                    var contentBody = httpClientEvent.Action?.Response?.Content?.Body;
+                    if (contentBody is string { Length: > 1000 } stringBody)
+                    {
+                        httpClientEvent.Action.Response.Content.Body = stringBody[..1000] + "<...>";
+                    }
+                }
+                return auditEvent.ToJson();
+            }));
+
+        Configuration.AddCustomAction(
+            ActionType.OnEventSaving,
+            HideCredentials);
+
+        void HideCredentials(AuditScope scope)
+        {
+
+            var httpAction = scope.GetHttpAction();
+            if (httpAction is not null)
+            {
+                HideAuthorizationHeader(httpAction.Request?.Headers);
+                HideAuthorizationHeader(httpAction.Response?.Headers);
+            }
+
+            void HideAuthorizationHeader(IDictionary<string, string>? headers)
+            {
+                if (headers?.ContainsKey("apikey") is true)
+                {
+                    headers["apikey"] = "*hidden*";
+                }
+            }
+        }
+
+		services.AddControllers(options =>
+		{
+			options.ModelBinderProviders.Insert(0, new DateOnlyModelBinderProvider());
+		})      
+		.AddJsonOptions(
+                options =>
+                {
+                    options.JsonSerializerOptions.Converters.Add(new DateOnlyJsonConverter());
+                });
 
         services.AddEndpointsApiExplorer();
 		services.AddSwaggerGen(
@@ -94,8 +147,9 @@ public class Startup
 			app.UseSwagger();
 			app.UseSwaggerUI();
 		}
-        app.UseMiddleware<RequestLogging>();
+
         app.UseRouting()
+			.UseMiddleware<RequestLoggingMiddleware>()
 			.UseEndpoints(endpoints => endpoints.MapControllers());
 	}
 }
