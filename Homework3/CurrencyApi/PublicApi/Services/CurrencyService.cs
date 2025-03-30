@@ -1,4 +1,6 @@
-﻿using System.Text.Json;
+﻿using System.Net;
+using System.Net.Http;
+using System.Text.Json;
 using Fuse8.BackendInternship.PublicApi;
 using Fuse8.BackendInternship.PublicApi.Exceptions;
 using Fuse8.BackendInternship.PublicApi.Models.Configurations;
@@ -43,30 +45,22 @@ public class CurrencyService
 
         if (!response.IsSuccessStatusCode)
         {
-            if (response.StatusCode == System.Net.HttpStatusCode.UnprocessableEntity)
+            if (response.StatusCode == HttpStatusCode.UnprocessableEntity)
             {
-                using var jsonDoc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-                var root = jsonDoc.RootElement;
+                var errorResponse = await response.Content.ReadFromJsonAsync<CurrencyApiErrorResponse>();
 
-                if (root.TryGetProperty("message", out var messageProp) &&
-                    messageProp.GetString() == "Validation error" &&
-                    root.TryGetProperty("errors", out var errorsProp) &&
-                    errorsProp.TryGetProperty("currencies", out var currenciesProp))
+                if (errorResponse?.Message == "Validation error" &&
+                    errorResponse.Errors?.TryGetValue("currencies", out var currencyErrors) == true &&
+                    currencyErrors.Contains("The selected currencies is invalid."))
                 {
-                    foreach (var error in currenciesProp.EnumerateArray())
-                    {
-                        if (error.GetString() == "The selected currencies is invalid.")
-                        {
-                            throw new CurrencyNotFoundException($"Неизвестная валюта");
-                        }
-                    }
+                    throw new CurrencyNotFoundException($"Неизвестная валюта");
                 }
             }
             throw new BadHttpRequestException("Ошибка получения данных");
         }
 
         string responseBody = await response.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<CurrencyApiResponse>(responseBody, new JsonSerializerOptions());
+        return JsonSerializer.Deserialize<CurrencyApiResponse>(responseBody, new JsonSerializerOptions()) ?? throw new BadHttpRequestException("Ошибка получения данных");
     }
 
     public async Task<bool> HasRemainApiRequestsAsync(CancellationToken token = default)
