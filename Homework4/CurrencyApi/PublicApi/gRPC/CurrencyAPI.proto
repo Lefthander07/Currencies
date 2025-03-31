@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+option csharp_namespace = "Fuse8.BackendIntership.PublicApi.GrpcContracts";
+
+package currency;
+
+import "google/protobuf/empty.proto";
+
+service GrpcCurrency {
+  rpc GetCurrencyCurrent (LatestCurrencyRequest) returns (CurrencyRate);
+  rpc GetCurrencyOnDate (HistoricalCurrencyRequest) returns (CurrencyRate);
+  rpc GetSetting (google.protobuf.Empty) returns (Settings);
+}
+
+message LatestCurrencyRequest {
+  string currency_code = 1;
+}
+
+message HistoricalCurrencyRequest {
+  string currency_code = 1;
+  string date = 2; // Формат YYYY-MM-DD
+}
+
+message CurrencyRate {
+  string currency_code = 1;
+  double value = 2;
+}
+
+message Settings {
+  string base_currency = 1;
+  bool requests_available = 2;
+}

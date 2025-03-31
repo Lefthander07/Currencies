@@ -1,4 +1,5 @@
-﻿using Fuse8.BackendInternship.PublicApi.Models.Configurations;
+﻿using Fuse8.BackendInternship.PublicApi.gRPC;
+using Fuse8.BackendInternship.PublicApi.Models.Configurations;
 using Fuse8.BackendInternship.PublicApi.Models.Responses;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -12,17 +13,17 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers;
 [Route("settings")]
 public class Settings : ControllerBase
 {
-    private readonly CurrencyService _currencyService;
+    private readonly CurrencyClient _currencyClient;
     private readonly CurrencySettigns _configuration;
 
     /// <summary>
     /// Конструктор для инъекции зависимостей.
     /// </summary>
-    /// <param name="currencyService">Сервис для получения данных о курсах валют.</param>
+    /// <param name="currencyClient">Сервис для получения данных о курсах валют.</param>
     /// <param name="configuration">Настройки приложения.</param>
-    public Settings(CurrencyService currencyService, IOptionsSnapshot<CurrencySettigns> configuration)
+    public Settings(CurrencyClient currencyClient, IOptionsSnapshot<CurrencySettigns> configuration)
     {
-        _currencyService = currencyService;
+        _currencyClient = currencyClient;
         _configuration = configuration.Value;
     }
 
@@ -33,20 +34,19 @@ public class Settings : ControllerBase
     /// <response code="200">Возвращает текущие настройки приложения.</response>
     /// <response code="500">Возвращает ошибку, если запрос не может быть обработан.</response>
     [HttpGet]
-    [ProducesResponseType(typeof(SettingsResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(SettingResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    public async Task<SettingsResponse> GetSettings()
+    public async Task<SettingResponse> GetSettings()
     {
         // Получаем информацию о статусе запросов из внешнего API
-        var status = await _currencyService.GetStatusAsync();
+        var status = await _currencyClient.GetSettingAsync();
 
-        return new SettingsResponse
+        return new SettingResponse
         {
-            DefaultCurrency = _configuration.DefaultCurrency,  // Валюта по умолчанию
-            BaseCurrency = _configuration.BaseCurrency,      // Базовая валюта
-            RequestLimit = status.RateLimits.MonthlyLimit.Total,               // Лимит доступных запросов
-            RequestCount = status.RateLimits.MonthlyLimit.Used,                // Количество использованных запросов
-            CurrencyRoundCount = _configuration.CurrencyRoundCount // Количество знаков после запятой для валюты
+            DefaultCurrency = _configuration.DefaultCurrency,  
+            BaseCurrency = status.BaseCurrency,
+            NewRequestsAvailable = status.RequestsAvailable,
+            CurrencyRoundCount = _configuration.CurrencyRoundCount 
         };
     }
 }

@@ -1,4 +1,5 @@
-﻿using Fuse8.BackendInternship.PublicApi.Models.Configurations;
+﻿using Fuse8.BackendInternship.PublicApi.gRPC;
+using Fuse8.BackendInternship.PublicApi.Models.Configurations;
 using Fuse8.BackendInternship.PublicApi.Models.ExternalApi;
 using Fuse8.BackendInternship.PublicApi.Models.Responses;
 using Microsoft.AspNetCore.Mvc;
@@ -13,12 +14,13 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
     [Route("currency")]
     public class CurrencyController : ControllerBase
     {
-        private readonly CurrencyService _currencyService;
+       // private readonly CurrencyService _currencyService;
         private readonly CurrencySettigns _configuration;
+        private readonly CurrencyClient _currencyClient;
 
-        public CurrencyController(CurrencyService currencyService, IOptionsSnapshot<CurrencySettigns> configuration)
+        public CurrencyController(CurrencyClient currencyClient, IOptionsSnapshot<CurrencySettigns> configuration)
         {
-            _currencyService = currencyService;
+            _currencyClient = currencyClient;
             _configuration = configuration.Value;
         }
 
@@ -44,13 +46,13 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         {
             string defaultCurrency = _configuration.DefaultCurrency;
             string baseCurrency = _configuration.BaseCurrency;
-            CurrencyApiResponse apiResponse = await _currencyService.GetCurrencyDataAsync(baseCurrency, defaultCurrency, null, token);
+            var grpcResponse = await _currencyClient.GetCurrencyCurrent(defaultCurrency);
 
             int roundDigits = _configuration.CurrencyRoundCount;
             return new CurrencyCurrentResponse
             {
                 Code = defaultCurrency,
-                Value = RoundCurrencyValue(apiResponse.Data[defaultCurrency].Value, roundDigits)
+                Value = RoundCurrencyValue(Convert.ToDecimal(grpcResponse.Value), roundDigits)
             };
         }
 
@@ -72,13 +74,13 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         {
             string defaultCurrency = code;
             string baseCurrency = _configuration.BaseCurrency;
-            CurrencyApiResponse apiResponse = await _currencyService.GetCurrencyDataAsync(baseCurrency, defaultCurrency);
+            var grpcResponse = await _currencyClient.GetCurrencyCurrent(defaultCurrency);
 
             int roundDigits = _configuration.CurrencyRoundCount;
             return new CurrencyCurrentResponse
             {
                 Code = defaultCurrency,
-                Value = RoundCurrencyValue(apiResponse.Data[defaultCurrency].Value, roundDigits)
+                Value = RoundCurrencyValue(Convert.ToDecimal(grpcResponse.Value), roundDigits)
             };
         }
 
@@ -103,14 +105,14 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
             string defaultCurrency = code;
             string baseCurrency = _configuration.BaseCurrency;
 
-            CurrencyApiResponse apiResponse = await _currencyService.GetCurrencyDataAsync(baseCurrency, defaultCurrency, date.ToString(), token);
+            var grpcRessponse = await _currencyClient.GetCurrencyOnDateAsync(defaultCurrency, date.ToString());
             int roundDigits = _configuration.CurrencyRoundCount;
             
             return new CurrencyHistoricalResponse
             {
                 Date = date.ToString("yyyy-MM-dd"),
                 Code = defaultCurrency,
-                Value = RoundCurrencyValue(apiResponse.Data[defaultCurrency].Value, roundDigits)
+                Value = RoundCurrencyValue(Convert.ToDecimal(grpcRessponse.Value), roundDigits)
             };
         }
     }

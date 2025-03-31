@@ -9,6 +9,9 @@ using Fuse8.BackendInternship.PublicApi.ModelBinders;
 using Fuse8.BackendInternship.PublicApi.JsonConverters;
 using Fuse8.BackendInternship.PublicApi.Middlewares;
 using Fuse8.BackendInternship.PublicApi.Models.Configurations;
+using Fuse8.BackendIntership.PublicApi.GrpcContracts;
+using Google.Protobuf.WellKnownTypes;
+using Fuse8.BackendInternship.PublicApi.gRPC;
 
 namespace Fuse8.BackendInternship.PublicApi;
 
@@ -61,7 +64,13 @@ public class Startup
 					// 2-я - через 3 сек
 					// 3-я - через 7 сек
 						return TimeSpan.FromSeconds(Math.Pow(2, retryAttempt) - 1);
-					}));
+                    }));
+
+		string grpc_url = _configuration.GetValue<string>("grpc_url");
+
+        services.AddGrpcClient<GrpcCurrency.GrpcCurrencyClient>(o => { o.Address = new Uri(grpc_url); }).
+			AddAuditHandler(audit => audit.IncludeResponseBody());
+        services.AddScoped<CurrencyClient>();
 
         services.AddHttpClient<CurrencyService>()
 			.AddAuditHandler(audit => audit.
