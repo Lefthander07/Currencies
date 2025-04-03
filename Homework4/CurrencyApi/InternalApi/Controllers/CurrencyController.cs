@@ -1,5 +1,6 @@
 ﻿using Fuse8.BackendInternship.InternalApi.ApiModels;
 using Fuse8.BackendInternship.InternalApi.Configurations;
+using Fuse8.BackendInternship.InternalApi.Contracts;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
@@ -12,11 +13,11 @@ namespace Fuse8.BackendInternship.InternalApi.Controllers
     [Route("currency")]
     public class CurrencyController : ControllerBase
     {
-        private readonly CashedCurrency _currencyCachedService;
+        private readonly ICachedCurrencyAPI _currencyCachedService;
         private readonly CurrencyHttpApi _currencyHttpApi;
-        private readonly CurrencySettigns _settings;
+        private readonly CurrencyOptions _settings;
 
-        public CurrencyController(CashedCurrency currencyService, CurrencyHttpApi currencyHttpApi, IOptionsSnapshot<CurrencySettigns> settings)
+        public CurrencyController(ICachedCurrencyAPI currencyService, CurrencyHttpApi currencyHttpApi, IOptionsSnapshot<CurrencyOptions> settings)
         {
             _currencyCachedService = currencyService;
             _currencyHttpApi = currencyHttpApi;
@@ -31,15 +32,14 @@ namespace Fuse8.BackendInternship.InternalApi.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status429TooManyRequests)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-        public async Task<CurrencyExchangeRate> GetCurrentCurrency(
+        public async Task<CurrencyExchangeRateLatest> GetCurrentCurrency(
             [FromRoute] string currencyCode, CancellationToken cancellationToken)
         {
              var response =  await _currencyCachedService.GetCurrentCurrencyAsync(currencyCode, cancellationToken);
-            return new CurrencyExchangeRate
+            return new CurrencyExchangeRateLatest
             {
                 CurrencyCode = response.CurrencyCode,
-                Value = RoundCurrencyValue(response.Value, _settings.CurrencyRoundCount)
-
+                Value = response.Value
             };
         }
 
@@ -51,20 +51,21 @@ namespace Fuse8.BackendInternship.InternalApi.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status429TooManyRequests)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-        public async Task<CurrencyExchangeRateHistorical> GetHistoricalCurrency(
+        public async Task<ActionResult<CurrencyExchangeRateHistorical>> GetHistoricalCurrency(
             [FromRoute] string currencyCode,
-            [FromRoute] string date)
+            [FromRoute] DateOnly date,
+            CancellationToken cancellationToken)
         {
             var response =  await _currencyCachedService.GetCurrencyOnDateAsync(
                 currencyCode,
-                DateOnly.Parse(date),
-                CancellationToken.None);
-            return new CurrencyExchangeRateHistorical
+                date,
+                cancellationToken);
+            return Ok(new CurrencyExchangeRateHistorical
             {
                 Date = date,
                 CurrencyCode = response.CurrencyCode,
-                Value = RoundCurrencyValue(response.Value, _settings.CurrencyRoundCount)
-            };
+                Value = response.Value
+            });
         }
 
         /// <summary>
@@ -73,17 +74,13 @@ namespace Fuse8.BackendInternship.InternalApi.Controllers
         [HttpGet("settings")]
         [ProducesResponseType(typeof(ApiStatus), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-        public async Task<ApiStatus> GetSettings()
+        public async Task<ActionResult<ApiStatus>> GetSettings(CancellationToken cancellationToken)
         {
-            var response = await _currencyHttpApi.GetStatusAsync();
-            return new ApiStatus {
+            var response = await _currencyHttpApi.GetStatusUsedAsync(cancellationToken);
+            return Ok(new ApiStatus {
                 BaseCurrency = _settings.BaseCurrency,
-                RequestsAvailable = response?.RateLimits?.MonthlyLimit?.Remaining < response?.RateLimits?.MonthlyLimit?.Total
-            };
-        }
-        private decimal RoundCurrencyValue(decimal value, int roundDigits)
-        {
-            return Math.Round(value, roundDigits);
+                RequestsAvailable = response
+            });
         }
     }
 }

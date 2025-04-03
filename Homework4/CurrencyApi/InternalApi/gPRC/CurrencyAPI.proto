@@ -26,7 +26,7 @@ message HistoricalCurrencyRequest {
   // Код валюты (например, "USD", "EUR").
   string currency_code = 1;
   
-  // Дата запроса курса в формате YYYY-MM-DD.
+  // Дата запроса курса в формате yyyy-MM-dd.
   string date = 2;
 }
 

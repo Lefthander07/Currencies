@@ -21,17 +21,3 @@ public interface ICachedCurrencyAPI
 	/// <returns>Курс на дату</returns>
 	public Task<CurrencyExchangeRate> GetCurrencyOnDateAsync(string currencyType, DateOnly date, CancellationToken cancellationToken);
 }
-
-// Данные модели использовать не обязательно, можно реализовать свои
-
-/// <summary>
-/// Курс валюты
-/// </summary>
-/// <param name="CurrencyType">Валюта</param>
-/// <param name="Value">Значение курса</param>
-public record CurrencyDTO(CurrencyType CurrencyType, decimal Value);
-
-public enum CurrencyType
-{
-	Usd, Rub, Kzt,
-}

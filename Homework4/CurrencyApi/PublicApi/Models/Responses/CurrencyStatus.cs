@@ -1,4 +1,4 @@
-﻿namespace Fuse8.BackendInternship.PublicApi.Models.ExternalApi;
+﻿namespace Fuse8.BackendInternship.PublicApi.Models.Responses;
 using System.Text.Json.Serialization;
 
 /// <summary>

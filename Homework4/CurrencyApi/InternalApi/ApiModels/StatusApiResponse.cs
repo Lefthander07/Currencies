@@ -8,12 +8,6 @@ using System.Text.Json.Serialization;
 public record StatusApiResponse
 {
     /// <summary>
-    /// Уникальный идентификатор аккаунта в системе внешнего API.
-    /// </summary>
-    [JsonPropertyName("account_id")]
-    public long AccountId { get; init; }
-
-    /// <summary>
     /// Информация о квотах и лимитах на использование API.
     /// </summary>
     [JsonPropertyName("quotas")]

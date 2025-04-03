@@ -1,5 +1,4 @@
-﻿using Fuse8.BackendInternship.PublicApi.Models.ExternalApi;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace Fuse8.BackendInternship.PublicApi.Models.Responses;
 
@@ -13,5 +12,5 @@ public record CurrencyHistoricalResponse : CurrencyCurrentResponse
     /// Момент на который курс был актуален
     /// </summary>
     [JsonPropertyName("date")]
-    public required string Date { get; init; }
+    public required DateOnly Date { get; init; }
 }

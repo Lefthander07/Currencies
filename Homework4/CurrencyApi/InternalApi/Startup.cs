@@ -1,18 +1,16 @@
 ﻿using System.Text.Json.Serialization;
 using Fuse8.BackendInternship.InternalApi.Configurations;
 using Fuse8.BackendInternship.InternalApi.Middlewares;
-
 using Microsoft.OpenApi.Models;
 using Serilog;
 using Audit.Http;
 using Audit.Core;
-using Grpc;
-using Serilog.Configuration;
-using Fuse8.BackendIntership.InternalApi.GrpcContracts;
 using Fuse8.BackendInternship.InternalApi.gRPC;
+using Fuse8.BackendInternship.InternalApi.Contracts;
+using Fuse8.BackendInternship.InternalApi.ModelBinders;
+using Fuse8.BackendInternship.InternalApi.JsonConverters;
 
 namespace Fuse8.BackendInternship.InternalApi;
-
 
 public class Startup
 {
@@ -33,28 +31,28 @@ public class Startup
         services.AddControllers(options =>
         {
             options.Filters.Add<CurrencyExceptionFilter>();
+            options.ModelBinderProviders.Insert(0, new DateOnlyModelBinderProvider());
         })
         // Добавляем глобальные настройки для преобразования Json
         .AddJsonOptions(
                     options =>
                     {
-                        // Добавляем конвертер для енама
-                        // По умолчанию енам преобразуется в цифровое значение
-                        // Этим конвертером задаем перевод в строковое значение
                         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                        options.JsonSerializerOptions.Converters.Add(new DateOnlyJsonConverter());
+
                     });
 
-        services.AddOptions<CurrencyHttpApiSettings>()
+        services.AddOptions<CurrencyHttpApiOptions>()
             .Bind(_configuration.GetSection("CurrencyHttpApi"))
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
-        services.AddOptions<CurrencySettigns>()
+        services.AddOptions<CurrencyOptions>()
             .Bind(_configuration.GetSection("Currency"))
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
-        services.AddOptions<Ports>()
+        services.AddOptions<PortsOptions>()
             .Bind(_configuration.GetSection("Ports"))
             .ValidateDataAnnotations()
             .ValidateOnStart();
@@ -82,29 +80,41 @@ public class Startup
             IncludeResponseHeaders().
             IncludeContentHeaders());
 
-        Log.Logger = new LoggerConfiguration()
-            .WriteTo.File("logs/audit.json", rollingInterval: RollingInterval.Day)
-            .CreateLogger();
-
-        _ = Configuration.Setup()
-            .UseSerilog(
-            config => config.Message(
-            auditEvent =>
+        Configuration.Setup()
+        .UseSerilog(
+            config => config
+            .LogLevel(
+                auditEvent =>
             {
-                if (auditEvent is AuditEventHttpClient httpClientEvent)
+                if (auditEvent is AuditEventHttpClient)
                 {
-                    var contentBody = httpClientEvent.Action?.Response?.Content?.Body;
-                    if (contentBody is string { Length: > 1000 } stringBody)
-                    {
-                        httpClientEvent.Action.Response.Content.Body = stringBody[..1000] + "<...>";
-                    }
+                    return Audit.Serilog.LogLevel.Debug;
                 }
-                return auditEvent.ToJson();
-            }));
 
+                return Audit.Serilog.LogLevel.Info;
+            }).Message(
+                AuditEvent =>
+                {
+                    AuditEvent.Environment = null;
+
+                    const int MaxAuditContentLength = 10_000;
+                    if (AuditEvent is AuditEventHttpClient httpClientEvent)
+                    {
+                        var responseContent = httpClientEvent.Action?.Response?.Content;
+                        if (responseContent is { Body: string { Length: > MaxAuditContentLength } bodyContent })
+                        {
+                            responseContent.Body = bodyContent[..MaxAuditContentLength] + "<...>";
+                        }
+                    }
+                    return AuditEvent.ToJson();
+                }));
         Configuration.AddCustomAction(
             ActionType.OnEventSaving,
             HideCredentials);
+        Configuration.JsonSettings = new System.Text.Json.JsonSerializerOptions()
+        {
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        };
 
         void HideCredentials(AuditScope scope)
         {
@@ -124,7 +134,7 @@ public class Startup
             }
         }
 
-        services.AddTransient<CashedCurrency>();
+        services.AddScoped<ICachedCurrencyAPI, CashedCurrency>();
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -140,18 +150,23 @@ public class Startup
         }
 
         var RESTport = _configuration.GetValue<int>("Ports:REST");
+        var GRPCport = _configuration.GetValue<int>("Ports:GRPC");
 
-        app.UseRouting();
-        app.UseWhen(context => context.Connection.LocalPort == RESTport, appBuilder =>
-        {
-            appBuilder.UseMiddleware<RequestLoggingMiddleware>();
-        });
+            app.UseWhen(
+            predicate: context => context.Connection.LocalPort == GRPCport,
+            configuration: grpcBuilder =>
+            {
+                grpcBuilder.UseRouting();
+                grpcBuilder.UseEndpoints(endpoints => endpoints.MapGrpcService<CurrencyService>());
+            });
 
-        app.UseEndpoints(endpoints =>
-        {
-            endpoints.MapGrpcService<CurrencyService>();
-            endpoints.MapControllers();
-        });
-
+            app.UseWhen(
+            predicate: context => context.Connection.LocalPort == RESTport,
+            configuration: restBuilder =>
+            {
+                restBuilder.UseRouting();
+                restBuilder.UseMiddleware<RequestLoggingMiddleware>();
+                restBuilder.UseEndpoints(endpoints => endpoints.MapControllers());
+            });
     }
 }

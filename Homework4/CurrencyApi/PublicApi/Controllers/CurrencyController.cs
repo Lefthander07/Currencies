@@ -1,6 +1,5 @@
 ﻿using Fuse8.BackendInternship.PublicApi.gRPC;
 using Fuse8.BackendInternship.PublicApi.Models.Configurations;
-using Fuse8.BackendInternship.PublicApi.Models.ExternalApi;
 using Fuse8.BackendInternship.PublicApi.Models.Responses;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -14,7 +13,6 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
     [Route("currency")]
     public class CurrencyController : ControllerBase
     {
-       // private readonly CurrencyService _currencyService;
         private readonly CurrencySettigns _configuration;
         private readonly CurrencyClient _currencyClient;
 
@@ -22,11 +20,6 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         {
             _currencyClient = currencyClient;
             _configuration = configuration.Value;
-        }
-
-        private decimal RoundCurrencyValue(decimal value, int roundDigits)
-        {
-            return Math.Round(value, roundDigits);
         }
 
         /// <summary>
@@ -42,17 +35,16 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status429TooManyRequests)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-        public async Task<CurrencyCurrentResponse> GetCurrencyRate(CancellationToken token)
+        public async Task<CurrencyCurrentResponse> GetCurrencyRate(CancellationToken token, CancellationToken cancellationToken)
         {
             string defaultCurrency = _configuration.DefaultCurrency;
             string baseCurrency = _configuration.BaseCurrency;
-            var grpcResponse = await _currencyClient.GetCurrencyCurrent(defaultCurrency);
+            var response = await _currencyClient.GetCurrencyCurrentAsync(defaultCurrency, cancellationToken);
 
-            int roundDigits = _configuration.CurrencyRoundCount;
             return new CurrencyCurrentResponse
             {
-                Code = defaultCurrency,
-                Value = RoundCurrencyValue(Convert.ToDecimal(grpcResponse.Value), roundDigits)
+                Code = response.CurrencyCode,
+                Value = response.ExchangeRate
             };
         }
 
@@ -70,17 +62,16 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status429TooManyRequests)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-        public async Task<CurrencyCurrentResponse> GetCurrencyRateByCode([FromRoute] string code)
+        public async Task<CurrencyCurrentResponse> GetCurrencyRateByCodeAsync([FromRoute] string code, CancellationToken cancellationToken)
         {
             string defaultCurrency = code;
             string baseCurrency = _configuration.BaseCurrency;
-            var grpcResponse = await _currencyClient.GetCurrencyCurrent(defaultCurrency);
+            var response = await _currencyClient.GetCurrencyCurrentAsync(defaultCurrency, cancellationToken);
 
-            int roundDigits = _configuration.CurrencyRoundCount;
             return new CurrencyCurrentResponse
             {
-                Code = defaultCurrency,
-                Value = RoundCurrencyValue(Convert.ToDecimal(grpcResponse.Value), roundDigits)
+                Code = response.CurrencyCode,
+                Value = response.ExchangeRate
             };
         }
 
@@ -100,19 +91,19 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status429TooManyRequests)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-        public async Task<CurrencyHistoricalResponse> GetCurrencyRateByDate([FromRoute] string code, [FromRoute] DateOnly date, CancellationToken token = default)
+        public async Task<CurrencyHistoricalResponse> GetCurrencyRateByDate([FromRoute] string code, [FromRoute] DateOnly date, CancellationToken cancellationToken)
         {
             string defaultCurrency = code;
             string baseCurrency = _configuration.BaseCurrency;
 
-            var grpcRessponse = await _currencyClient.GetCurrencyOnDateAsync(defaultCurrency, date.ToString());
+            var response = await _currencyClient.GetCurrencyOnDateAsync(defaultCurrency, date, cancellationToken);
             int roundDigits = _configuration.CurrencyRoundCount;
             
             return new CurrencyHistoricalResponse
             {
-                Date = date.ToString("yyyy-MM-dd"),
-                Code = defaultCurrency,
-                Value = RoundCurrencyValue(Convert.ToDecimal(grpcRessponse.Value), roundDigits)
+                Date = date,
+                Code = response.CurrencyCode,
+                Value = response.ExchangeRate
             };
         }
     }

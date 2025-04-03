@@ -36,10 +36,10 @@ public class Settings : ControllerBase
     [HttpGet]
     [ProducesResponseType(typeof(SettingResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    public async Task<SettingResponse> GetSettings()
+    public async Task<SettingResponse> GetSettings(CancellationToken cancellationToken)
     {
         // Получаем информацию о статусе запросов из внешнего API
-        var status = await _currencyClient.GetSettingAsync();
+        var status = await _currencyClient.GetSettingAsync(cancellationToken);
 
         return new SettingResponse
         {

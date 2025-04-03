@@ -11,7 +11,7 @@ public sealed class CurrencyHttpApi : ICurrencyAPI
     private const string CurrenciesQueryKey = "currencies";
     private readonly HttpClient _httpClient;
 
-    public CurrencyHttpApi(HttpClient httpClient, IOptionsSnapshot<CurrencyHttpApiSettings> apiSettingsSnapshot)
+    public CurrencyHttpApi(HttpClient httpClient, IOptionsSnapshot<CurrencyHttpApiOptions> apiSettingsSnapshot)
     {
         _httpClient = httpClient;
         var currencyHttpApiSettings = apiSettingsSnapshot.Value;
@@ -74,28 +74,6 @@ public sealed class CurrencyHttpApi : ICurrencyAPI
         }
     }
 
-    public Task<CurrencyExchangeRate[]> GetAllCurrentesAsync(string baseCurrency, CancellationToken cancellationToken)
-    {
-        return GetCurrencyExchangeRateAsync(
-    requestUrl: $"latest?$base_currency={baseCurrency}",
-    cancellationToken);
-    }
-
-    public Task<CurrencyExchangeRate[]> GetCurrencyExchangeRateAsync(string currencyCode, string baseCurrency, CancellationToken cancellationToken)
-    {
-        return GetCurrencyExchangeRateAsync(
-            requestUrl: $"latest?{CurrenciesQueryKey}={currencyCode}&base_currency={baseCurrency}",
-            cancellationToken);
-    }
-
-    public Task<CurrencyExchangeRate[]> GetCurrencyExchangeRateOnDateAsync(string currencyCode, string baseCurrency, DateOnly date,
-        CancellationToken cancellationToken)
-    {
-        return GetCurrencyExchangeRateAsync(
-            requestUrl: $"historical?date={date:yyyy-MM-dd}&{CurrenciesQueryKey}={currencyCode}&base_currency={baseCurrency}",
-            cancellationToken);
-    }
-
     private async Task<CurrencyExchangeRate[]> GetCurrencyExchangeRateAsync(string requestUrl, CancellationToken cancellationToken)
     {
         await HasRemainApiRequestsAsync(token: cancellationToken);
@@ -110,8 +88,6 @@ public sealed class CurrencyHttpApi : ICurrencyAPI
         }
 
        return response.Data.Values.Select(data => new CurrencyExchangeRate { CurrencyCode = data.CurrencyCode, Value = data.Value }).ToArray();
-
-
 
         async Task EnsureSucceedRequestAsync()
         {
@@ -155,5 +131,9 @@ public sealed class CurrencyHttpApi : ICurrencyAPI
         throw new BadHttpRequestException("Не удалось получить статус");
     }
 
-
+    public async Task<bool> GetStatusUsedAsync(CancellationToken token = default)
+    {
+        var response = await GetStatusAsync(token);
+        return response?.RateLimits?.MonthlyLimit?.Total > response?.RateLimits?.MonthlyLimit?.Used;
+    }
 }

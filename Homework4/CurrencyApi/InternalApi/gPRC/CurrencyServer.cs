@@ -9,19 +9,19 @@ namespace Fuse8.BackendInternship.InternalApi.gRPC;
 public class CurrencyService : GrpcCurrency.GrpcCurrencyBase
 {
     private readonly ICachedCurrencyAPI _currencyApi;
-    private readonly CurrencyHttpApi _currencyService;
-    private readonly CurrencySettigns _configuration;
+    private readonly CurrencyHttpApi _currencyHttpApi;
+    private readonly CurrencyOptions _configuration;
 
-    public CurrencyService(CashedCurrency currencyApi, CurrencyHttpApi currencyHttpApi, IOptionsSnapshot<CurrencySettigns> currencySettings)
+    public CurrencyService(ICachedCurrencyAPI currencyApi, CurrencyHttpApi currencyHttpApi, IOptionsSnapshot<CurrencyOptions> currencySettings)
     {
         _currencyApi = currencyApi;
-        _currencyService = currencyHttpApi;
+        _currencyHttpApi = currencyHttpApi;
         _configuration = currencySettings.Value;
     }
 
     public override async Task<CurrencyRate> GetCurrencyCurrent(LatestCurrencyRequest request, ServerCallContext context)
     {
-       var response = await _currencyApi.GetCurrentCurrencyAsync(request.CurrencyCode, CancellationToken.None);
+       var response = await _currencyApi.GetCurrentCurrencyAsync(request.CurrencyCode, context.CancellationToken);
         return new CurrencyRate { CurrencyCode = response.CurrencyCode,
             Value = (double)response.Value
         };
@@ -29,7 +29,7 @@ public class CurrencyService : GrpcCurrency.GrpcCurrencyBase
 
     public override async Task<CurrencyRate> GetCurrencyOnDate(HistoricalCurrencyRequest request, ServerCallContext context)
     {
-        var response = await _currencyApi.GetCurrencyOnDateAsync(request.CurrencyCode, DateOnly.Parse(request.Date), CancellationToken.None);
+        var response = await _currencyApi.GetCurrencyOnDateAsync(request.CurrencyCode, DateOnly.ParseExact(request.Date, "yyyy-MM-dd"), context.CancellationToken);
         return new CurrencyRate
         {
             CurrencyCode = response.CurrencyCode,
@@ -39,12 +39,12 @@ public class CurrencyService : GrpcCurrency.GrpcCurrencyBase
 
     public async override Task<Settings> GetSetting(Empty request, ServerCallContext context)
     {
-        var response = await _currencyService.GetStatusAsync();
+        var response = await _currencyHttpApi.GetStatusUsedAsync(context.CancellationToken);
 
         return new Settings
         {
             BaseCurrency = _configuration.BaseCurrency,
-            RequestsAvailable = response.RateLimits.MonthlyLimit.Total > response.RateLimits.MonthlyLimit.Remaining
+            RequestsAvailable = response
         };
     }
 }

@@ -1,17 +1,14 @@
 ﻿using Audit.Http;
 using Audit.Core;
-using System.Text.Json.Serialization;
 using Microsoft.OpenApi.Models;
 using Serilog;
-using Polly;
-using Polly.Extensions.Http;
 using Fuse8.BackendInternship.PublicApi.ModelBinders;
 using Fuse8.BackendInternship.PublicApi.JsonConverters;
 using Fuse8.BackendInternship.PublicApi.Middlewares;
 using Fuse8.BackendInternship.PublicApi.Models.Configurations;
 using Fuse8.BackendIntership.PublicApi.GrpcContracts;
-using Google.Protobuf.WellKnownTypes;
 using Fuse8.BackendInternship.PublicApi.gRPC;
+using Microsoft.Extensions.Options;
 
 namespace Fuse8.BackendInternship.PublicApi;
 
@@ -26,20 +23,15 @@ public class Startup
 
 	public void ConfigureServices(IServiceCollection services)
 	{
-		services.AddControllers(options =>
-		{
-			// Добавляем глобальный фильтр для обработки исключений
-			options.Filters.Add<CurrencyExceptionFilter>();
-		})
-		// Добавляем глобальные настройки для преобразования Json
-		.AddJsonOptions(
-		options =>
-		{
-			// Добавляем конвертер для енама
-			// По умолчанию енам преобразуется в цифровое значение
-			// Этим конвертером задаем перевод в строковое значение
-			options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-		});
+        services.AddControllers(options =>
+        {
+            options.Filters.Add<CurrencyExceptionFilter>();
+            options.ModelBinderProviders.Insert(0, new DateOnlyModelBinderProvider());
+        })
+        .AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions.Converters.Add(new DateOnlyJsonConverter());
+        });
 
         services.AddOptions<CurrencyHttpApiSettings>()
             .Bind(_configuration.GetSection("CurrencyHttpApi"))
@@ -51,40 +43,25 @@ public class Startup
 			.ValidateDataAnnotations()
 			.ValidateOnStart();
 
-		services.AddHttpClient<CurrencyService>()
-			.AddPolicyHandler(HttpPolicyExtensions
-			// Настраиваем повторный запрос при получении ошибок сервера (HTTP-код = 5XX) и для таймаута выполнения запроса (HTTP-код = 408)
-				.HandleTransientHttpError()
-				.WaitAndRetryAsync(
-					retryCount: 3,
-					sleepDurationProvider: retryAttempt =>
-					{
-					// Настраиваем экспоненциальную задержку для отправки повторного запроса при ошибке
-					// 1-я попытка будет выполнена через 1 сек
-					// 2-я - через 3 сек
-					// 3-я - через 7 сек
-						return TimeSpan.FromSeconds(Math.Pow(2, retryAttempt) - 1);
-                    }));
+        services.AddOptions<grpcUrlOptions>()
+            .Bind(_configuration.GetSection("GRPC"))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
 
-		string grpc_url = _configuration.GetValue<string>("grpc_url");
+        services.AddGrpcClient<GrpcCurrency.GrpcCurrencyClient>((provider, options) =>
+        {
+            var settings = provider.GetRequiredService<IOptions<grpcUrlOptions>>();
+            options.Address = new Uri(settings.Value.Url);
+        }).AddAuditHandler(audit => audit.
+            IncludeRequestHeaders().
+            IncludeRequestBody().
+            IncludeResponseBody().
+            IncludeResponseHeaders().
+            IncludeContentHeaders());
 
-        services.AddGrpcClient<GrpcCurrency.GrpcCurrencyClient>(o => { o.Address = new Uri(grpc_url); }).
-			AddAuditHandler(audit => audit.IncludeResponseBody());
         services.AddScoped<CurrencyClient>();
 
-        services.AddHttpClient<CurrencyService>()
-			.AddAuditHandler(audit => audit.
-			IncludeRequestHeaders().
-			IncludeRequestBody().
-			IncludeResponseBody().
-			IncludeResponseHeaders().
-			IncludeContentHeaders());
-
-        Log.Logger = new LoggerConfiguration()
-            .WriteTo.File("logs/audit.json", rollingInterval: RollingInterval.Day)
-            .CreateLogger();
-
-        _ = Configuration.Setup()
+        Configuration.Setup()
             .UseSerilog(
             config => config.Message(
             auditEvent =>
@@ -99,39 +76,6 @@ public class Startup
                 }
                 return auditEvent.ToJson();
             }));
-
-        Configuration.AddCustomAction(
-            ActionType.OnEventSaving,
-            HideCredentials);
-
-        void HideCredentials(AuditScope scope)
-        {
-
-            var httpAction = scope.GetHttpAction();
-            if (httpAction is not null)
-            {
-                HideAuthorizationHeader(httpAction.Request?.Headers);
-                HideAuthorizationHeader(httpAction.Response?.Headers);
-            }
-
-            void HideAuthorizationHeader(IDictionary<string, string>? headers)
-            {
-                if (headers?.ContainsKey("apikey") is true)
-                {
-                    headers["apikey"] = "*hidden*";
-                }
-            }
-        }
-
-		services.AddControllers(options =>
-		{
-			options.ModelBinderProviders.Insert(0, new DateOnlyModelBinderProvider());
-		})      
-		.AddJsonOptions(
-                options =>
-                {
-                    options.JsonSerializerOptions.Converters.Add(new DateOnlyJsonConverter());
-                });
 
         services.AddEndpointsApiExplorer();
 		services.AddSwaggerGen(

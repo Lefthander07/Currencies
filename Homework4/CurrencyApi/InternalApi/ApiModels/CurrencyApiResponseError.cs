@@ -19,9 +19,9 @@ public record CurrencyApiErrorResponse
     [JsonPropertyName("errors")]
     public required Dictionary<string, List<string>> Errors { get; init; }
 
-    /// <summary>
-    /// Дополнительная информация об ошибке.
-    /// </summary>
-    [JsonPropertyName("info")]
-    public required string Info { get; init; }
+    ///// <summary>
+    ///// Дополнительная информация об ошибке.
+    ///// </summary>
+    //[JsonPropertyName("info")]
+    //public required string Info { get; init; }
 }

@@ -11,11 +11,11 @@ public record CurrencyCurrentResponse
     /// Код валюты, например, USD, EUR.
     /// </summary>
     [JsonPropertyName("code")]
-    public string Code { get; init; }
+    public required string Code { get; init; }
 
     /// <summary>
     /// Значение валюты по отношению к базовой валюте.
     /// </summary>
     [JsonPropertyName("value")]
-    public decimal Value { get; init; }
+    public required decimal Value { get; init; }
 }

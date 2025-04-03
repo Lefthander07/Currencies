@@ -13,10 +13,10 @@
 
         public async Task InvokeAsync(HttpContext httpContext)
         {
-            _logger.LogInformation("Входящий запрос: {Method} {Url} Query {query}:",
+            _logger.LogInformation("Входящий запрос: {Method} {Url} Query {Query}",
                 httpContext.Request.Method,
                 httpContext.Request.Path,
-                httpContext.Request.QueryString); 
+                httpContext.Request.QueryString);
 
             await _next(httpContext);
             _logger.LogInformation("Статус ответа: {StatusCode}", httpContext.Response.StatusCode);
