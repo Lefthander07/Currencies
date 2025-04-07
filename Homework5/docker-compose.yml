@@ -10,6 +10,6 @@ services:
       POSTGRES_PASSWORD: P@ssw0rd
       POSTGRES_DB: fuse8Internship
     ports:
-      - "5432:5432"
+      - "10003:5432"
     volumes:
        - /DockerData/postgres/data:/var/lib/postgresql/data

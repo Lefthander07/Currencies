@@ -128,7 +128,7 @@ public sealed class CurrencyHttpApi : ICurrencyAPI
             var contentjson = await response.Content.ReadFromJsonAsync<StatusApiResponse>(token);
             return contentjson ?? throw new BadHttpRequestException("Ответ от API пуст или невалиден.");
         }
-        throw new BadHttpRequestException("Не удалось получить статус");
+        throw new ApiRequestLimitException("Исчерпан лимит запросов");
     }
 
     public async Task<bool> GetStatusUsedAsync(CancellationToken token = default)

@@ -37,7 +37,7 @@ public class CurrencyExceptionFilter : IExceptionFilter
                 _logger.LogError(context.Exception, "An unexpected error occurred");
                 context.Result = new JsonResult(new ProblemDetails
                 {
-                    Title = "An unexpected error occurred",
+                    Title = context.Exception.Message,
                     Status = StatusCodes.Status500InternalServerError
                 });
                 context.HttpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;

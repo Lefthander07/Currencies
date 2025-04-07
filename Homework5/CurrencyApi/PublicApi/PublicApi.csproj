@@ -17,6 +17,7 @@
         <PackageReference Include="Audit.HttpClient" Version="27.5.0" />
         <PackageReference Include="Audit.NET" Version="27.5.0" />
         <PackageReference Include="Audit.NET.Serilog" Version="27.5.0" />
+        <PackageReference Include="EFCore.NamingConventions" Version="9.0.0" />
         <PackageReference Include="Google.Protobuf" Version="3.30.2" />
         <PackageReference Include="Grpc.AspNetCore" Version="2.47.0" />
         <PackageReference Include="Grpc.Tools" Version="2.71.0">
@@ -24,7 +25,12 @@
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.3" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.3">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
         <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="9.0.3" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
         <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
         <PackageReference Include="Serilog.Exceptions" Version="8.4.0" />
         <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
@@ -32,9 +38,5 @@
 		<PackageReference Include="Grpc.Core" Version="2.46.6" />
 		<PackageReference Include="Grpc.Core.Api" Version="2.70.0" />
     </ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Services\" />
-	</ItemGroup>
 
 </Project>
