@@ -24,11 +24,10 @@ public class SelectedRateController : ControllerBase
     /// <summary>
     /// Получить актуальный курс выбранной валютной пары.
     /// </summary>
-    /// <param name="name">Название выбранной валютной пары.</param>
+    /// <param name="name">Название избранной валютной пары.</param>
     /// <param name="cancellationToken">Токен отмены операции.</param>
     /// <returns>Актуальный курс валюты.</returns>
     /// <response code="200">Возвращает курс валютной пары на текущий момент, если запрос успешен.</response>
-    /// <response code="404">Возвращает ошибку, если код валюты не найден</response>
     /// <response code="500">Возвращает ошибку, если произошла другая неизвестная ошибка.</response>
     [HttpGet("{name}")]
     [ProducesResponseType(typeof(CurrencyCurrentResponse), StatusCodes.Status200OK)]
@@ -49,15 +48,15 @@ public class SelectedRateController : ControllerBase
     /// <summary>
     /// Получить курс валютной пары по имени на указанную дату.
     /// </summary>
-    /// <param name="name">Название выбранной валютной пары.</param>
+    /// <param name="name">Название избранной валютной пары.</param>
     /// <param name="date">Дата, на которую нужно получить курс.</param>
     /// <param name="cancellationToken">Токен отмены операции.</param>
     /// <response code="200">Возвращает курс валютной пары на определенную, если запрос успешен.</response>
-    /// <response code="404">Возвращает ошибку, если код валюты не найден</response>
+    /// <response code="400">Возвращает ошибку, некорректный запрос (формат даты)</response>
     /// <response code="500">Возвращает ошибку, если произошла другая неизвестная ошибка.</response>
     [HttpGet("{name}/{date}")]
     [ProducesResponseType(typeof(CurrencyCurrentResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(CurrencyCurrentResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<CurrencyCurrentResponse> GetSelectedRateHistorical([FromRoute] string name, [FromRoute] DateOnly date, CancellationToken cancellationToken)
     {

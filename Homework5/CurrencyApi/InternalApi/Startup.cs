@@ -153,7 +153,6 @@ public class Startup
             }
         );
             
-       // services.AddScoped<ICachedCurrencyAPI, CashedCurrency>();
         services.AddScoped<ICachedCurrencyAPI, CashedCurrency_DB>();
     }
 

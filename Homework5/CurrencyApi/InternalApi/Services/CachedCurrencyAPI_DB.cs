@@ -13,7 +13,7 @@ public class CashedCurrency_DB : ICachedCurrencyAPI
     private readonly CurrencyDbContext _dbContext;
     private readonly TimeSpan _cacheExpiration;
     private readonly string _cachedDirectory;
-    private readonly string _baseCurrency = "USD";
+    private const string CACHE_BASE  = "USD";
 
 
     public CashedCurrency_DB(CurrencyHttpApi currencyAPI, IOptionsSnapshot<CurrencyOptions> apiSettings, CurrencyDbContext dbContext)
@@ -29,14 +29,14 @@ public class CashedCurrency_DB : ICachedCurrencyAPI
     public async Task<CurrencyExchangeRate> GetCurrentCurrencyAsync(string currencyType, CancellationToken cancellationToken = default)
     {
         
-        if (currencyType == _baseCurrency)
+        if (currencyType == CACHE_BASE )
         {
             return new CurrencyExchangeRate { CurrencyCode = currencyType, Value = 1 };
         }
 
         var freshCache = await _dbContext.CurrencyCaches
-            .Where(c => c.BaseCurrency == _baseCurrency &&
-                        DateTime.UtcNow - c.CacheDate < TimeSpan.FromHours(2))
+            .Where(c => c.BaseCurrency == CACHE_BASE &&
+                        DateTime.UtcNow - c.CacheDate < _cacheExpiration)
             .Include(c => c.ExchangeRates)
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -44,10 +44,10 @@ public class CashedCurrency_DB : ICachedCurrencyAPI
 
         if (freshCache == null)
         {
-            var currencies = await _currencyAPI.GetAllCurrentCurrenciesAsync(_baseCurrency, cancellationToken);
+            var currencies = await _currencyAPI.GetAllCurrentCurrenciesAsync(CACHE_BASE, cancellationToken);
             var cacheMeta = new CurrencyCache
             {
-                BaseCurrency = _baseCurrency,
+                BaseCurrency = CACHE_BASE,
                 CacheDate = DateTime.UtcNow
             };
 
@@ -85,13 +85,13 @@ public class CashedCurrency_DB : ICachedCurrencyAPI
 
     public async Task<CurrencyExchangeRate> GetCurrencyOnDateAsync(string currencyType, DateOnly date, CancellationToken cancellationToken = default)
     {
-        if (currencyType == _baseCurrency)
+        if (currencyType == CACHE_BASE )
         {
             return new CurrencyExchangeRate { CurrencyCode = currencyType, Value = 1 };
         }
 
         var freshCache = await _dbContext.CurrencyCaches
-            .Where(c => c.BaseCurrency == _baseCurrency && DateOnly.FromDateTime(c.CacheDate) == date)
+            .Where(c => c.BaseCurrency == CACHE_BASE && DateOnly.FromDateTime(c.CacheDate) == date)
             .OrderByDescending(c => c.CacheDate)
             .Include(c => c.ExchangeRates)
             .FirstOrDefaultAsync(cancellationToken);
@@ -100,10 +100,10 @@ public class CashedCurrency_DB : ICachedCurrencyAPI
 
         if (freshCache == null)
         {
-            var currencies = await _currencyAPI.GetAllCurrenciesOnDateAsync(_baseCurrency, date, cancellationToken);
+            var currencies = await _currencyAPI.GetAllCurrenciesOnDateAsync(CACHE_BASE, date, cancellationToken);
             var cacheMeta = new CurrencyCache
             {
-                BaseCurrency = _baseCurrency,
+                BaseCurrency = CACHE_BASE,
                 CacheDate = currencies.LastUpdatedAt
             };
 

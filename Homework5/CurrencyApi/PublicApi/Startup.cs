@@ -37,11 +37,6 @@ public class Startup
             options.JsonSerializerOptions.Converters.Add(new DateOnlyJsonConverter());
         });
 
-        services.AddOptions<CurrencyHttpApiSettings>()
-            .Bind(_configuration.GetSection("CurrencyHttpApi"))
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
-
 		services.AddOptions<CurrencySettigns>()
 			.Bind(_configuration.GetSection("Currency"))
 			.ValidateDataAnnotations()
@@ -117,9 +112,13 @@ public class Startup
 	{
 		if (env.IsDevelopment())
 		{
-			app.UseSwagger();
-			app.UseSwaggerUI();
-		}
+            app.UseSwagger();
+            app.UseSwaggerUI(options =>
+            {
+                options.SwaggerEndpoint("/swagger/v1/swagger.json", "Currency Public API v1");
+                options.RoutePrefix = "";
+            });
+        }
 
         app.UseRouting()
 			.UseMiddleware<RequestLoggingMiddleware>()

@@ -23,7 +23,7 @@ public class SelectedExchangeRatesService
         var existingByName = await _context.SelectedExchangeRates.FirstOrDefaultAsync(e => e.Name == name, cancellationToken);
         if (existingByName == null)
         {
-            throw new ArgumentException($"Избранный курс с именем '{name}'отсутствует в базе данных.");
+            throw new ArgumentException($"Избранная валютная с именем '{name}'отсутствует в базе данных.");
         }
         return existingByName;
     }
@@ -38,7 +38,7 @@ public class SelectedExchangeRatesService
 
         if (existingByName != null)
         {
-            throw new ArgumentException($"Избранный курс с именем '{name}' уже существует в базе данных.");
+            throw new ArgumentException($"Избранная валютная с именем '{name}' уже существует в базе данных.");
         }
 
         var existingByCurrencies = await _context.SelectedExchangeRates
@@ -46,7 +46,7 @@ public class SelectedExchangeRatesService
         
         if (existingByCurrencies)
         {
-            throw new ArgumentException($"Избранный курс с {defaultCurrency} и {baseCurrency} существует.");
+            throw new ArgumentException($"Избранная валютная с {defaultCurrency} и {baseCurrency} существует.");
         }
 
         var newSelected = new SelectedExchangeRates
@@ -68,7 +68,7 @@ public class SelectedExchangeRatesService
 
         if (existingByName is null)
         {
-            throw new ArgumentException($"Избранный курс с именем '{name}' отсутствует в базе.");
+            throw new ArgumentException($"Избранная валютная пара с именем '{name}' отсутствует в базе.");
         }
 
         _context.SelectedExchangeRates.Remove(existingByName);
@@ -81,22 +81,25 @@ public class SelectedExchangeRatesService
 
         if (existingByName is null)
         {
-            throw new ArgumentException($"Избранный курс с именем '{name}' отсутствует в базе.");
+            throw new ArgumentException($"Избранная валютная пара с именем '{name}' отсутствует в базе.");
         }
 
-        var existingByNewName = await _context.SelectedExchangeRates.FirstOrDefaultAsync(e => e.Name == newName, cancellationToken);
-
-        if (existingByNewName is not null)
+        if (name != newName)
         {
-            throw new ArgumentException($"Избранный курс с новым именем '{name}' уже присутствует в базе.");
+            var existingByNewName = await _context.SelectedExchangeRates.FirstOrDefaultAsync(e => e.Name == newName, cancellationToken);
+
+            if (existingByNewName is not null)
+            {
+                throw new ArgumentException($"Избранная валютная пара с новым именем '{name}' уже присутствует в базе.");
+            }
         }
 
         var existingByCurrencies = await _context.SelectedExchangeRates
-            .AnyAsync(x => x.CurrencyCode == defaultCurrency && x.BaseCurrency == baseCurrency);
+            .AnyAsync(x => x.CurrencyCode == defaultCurrency && x.BaseCurrency == baseCurrency && x.Name != name);
 
         if (existingByCurrencies)
         {
-            throw new ArgumentException($"Избранный курс с {defaultCurrency} и {baseCurrency} существует.");
+            throw new ArgumentException($"Избранная валютная пара с {defaultCurrency} и {baseCurrency} существует.");
         }
 
         existingByName.CurrencyCode = defaultCurrency;

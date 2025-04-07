@@ -31,11 +31,9 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         /// </summary>
         /// <returns>Объект с кодом валюты и её значением по отношению к базовой валюте.</returns>
         /// <response code="200">Возвращает курс валюты на указанную дату, если запрос успешен.</response>
-        /// <response code="404">Возвращает ошибку, если код валюты не найден</response>
         /// <response code="500">Возвращает ошибку, если произошла другая неизвестная ошибка.</response>
         [HttpGet]
         [ProducesResponseType(typeof(CurrencyCurrentResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<CurrencyCurrentResponse> GetCurrencyRate(CancellationToken cancellationToken)
         {
@@ -57,11 +55,9 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         /// <param name="cancellationToken">Токен отмены операции.</param>
         /// <returns>Объект с кодом валюты, её курсом и датой.</returns>
         /// <response code="200">Возвращает курс валюты на указанную дату.</response>
-        /// <response code="404">Возвращает ошибку, если код валюты не найден</response>
         /// <response code="500">Внутренняя ошибка сервера.</response>
         [HttpGet("{code}")]
         [ProducesResponseType(typeof(CurrencyCurrentResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<CurrencyCurrentResponse> GetCurrencyRateByCodeAsync([FromRoute] string code,
                                                                               CancellationToken cancellationToken)
@@ -84,11 +80,11 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         /// <param name="cancellationToken">Токен отмены операции.</param>
         /// <returns>Объект с кодом валюты, её курсом и датой.</returns>
         /// <response code="200">Возвращает курс валюты на указанную дату.</response>
-        /// <response code="404">Возвращает ошибку, если код валюты не найден</response> 
+        /// <response code="400">Некорректный запрос.</response>
         /// <response code="500">Внутренняя ошибка сервера.</response>
         [HttpGet("{code}/{date}")]
         [ProducesResponseType(typeof(CurrencyHistoricalResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<CurrencyHistoricalResponse> GetCurrencyRateByDate([FromRoute] string code, 
                                                                             [FromRoute] DateOnly date, 

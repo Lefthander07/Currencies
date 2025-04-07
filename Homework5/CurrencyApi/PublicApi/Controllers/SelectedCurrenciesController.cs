@@ -129,7 +129,7 @@ public class SelectedCurrenciesController : ControllerBase
                                                   [FromBody] SelectedCurrencies request,
                                                    CancellationToken cancellationToken)
     {
-        await _service.UpdateSelectedAsync(name, request.CurrencyCode, request.BaseCurrency, request.Name, cancellationToken);
+        await _service.UpdateSelectedAsync(name, request.BaseCurrency, request.CurrencyCode, request.Name, cancellationToken);
         return NoContent();
 
     }
