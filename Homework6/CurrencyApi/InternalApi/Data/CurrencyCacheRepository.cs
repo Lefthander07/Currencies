@@ -71,8 +71,4 @@ public class CurrencyCacheRepository
         await _dbContext.SaveChangesAsync(cancellationToken);
         return freshCache;
     }
-
-
-
-
 }
