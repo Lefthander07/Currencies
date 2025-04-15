@@ -1,5 +1,8 @@
 namespace Fuse8.BackendInternship.gRPC;
 
+/// <summary>
+/// Представляет значение с десятичной точностью, состоящее из целых единиц и наносекунд.
+/// </summary>
 public partial class DecimalValue
 {
     private const decimal NanoFactor = 1_000_000_000;

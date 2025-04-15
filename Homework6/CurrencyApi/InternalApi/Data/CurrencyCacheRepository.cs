@@ -12,6 +12,13 @@ public class CurrencyCacheRepository
         _dbContext = dbContext;
     }
 
+    /// <summary>
+    /// Получает самый последний кэш валют для указанной базовой валюты, если кэш еще не истек по времени.
+    /// </summary>
+    /// <param name="baseCurrency">Код базовой валюты (например, "USD"), для которой необходимо получить кэш.</param>
+    /// <param name="expiration">Период времени, в течение которого кэш считается действительным.</param>
+    /// <param name="cancellationToken">Токен отмены для асинхронной операции.</param>
+    /// <returns>Возвращает объект <see cref="CurrencyCache"/>, если кэш найден и он еще действителен, иначе <see langword="null"/>.</returns>
     public Task<CurrencyCache?> GetLatestCacheAsync(string baseCurrency, TimeSpan expiration, CancellationToken cancellationToken)
     {
         return  _dbContext.CurrencyCaches
@@ -22,6 +29,13 @@ public class CurrencyCacheRepository
             .FirstOrDefaultAsync(cancellationToken);
     }
 
+    /// <summary>
+    /// Получает кэш валют на указанную дату для заданной базовой валюты.
+    /// </summary>
+    /// <param name="baseCurrency">Код базовой валюты (например, "USD"), для которой требуется получить кэш.</param>
+    /// <param name="date">Дата, для которой необходимо получить кэш валют.</param>
+    /// <param name="cancellationToken">Токен отмены для асинхронной операции.</param>
+    /// <returns>Возвращает объект <see cref="CurrencyCache"/>, если кэш для указанной даты найден, иначе <see langword="null"/>.</returns>
     public Task<CurrencyCache?> GetCacheByDateAsync(string baseCurrency, DateOnly date, CancellationToken cancellationToken)
     {
             return _dbContext.CurrencyCaches

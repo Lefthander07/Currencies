@@ -20,6 +20,14 @@ public class CurrencyClient
         _currencySettings = currencySettings.Value;
     }
 
+    /// <summary>
+    /// Получает текущий обменный курс для указанной валюты относительно базовой валюты асинхронно.
+    /// </summary>
+    /// <param name="сurrencyCodeFromRequest">Код валюты для запроса текущего обменного курса.</param>
+    /// <param name="baseCurrencyFromRequest">Код базовой валюты для запроса текущего обменного курса.</param>
+    /// <param name="cancellationToken">Токен отмены, который позволяет отменить выполнение операции.</param>
+    /// <returns>Объект <see cref="CurrencyExchangeRate"/>, содержащий валютный код и курс обмена.</returns>
+    /// <exception cref="CurrencyNotFoundException">Бросается, если указанный код валюты или базовой валюты не существует.</exception>
     public async Task<CurrencyExchangeRate> GetCurrencyCurrentAsync(CurrencyCodeDTO сurrencyCodeFromRequest, CurrencyCodeDTO baseCurrencyFromRequest, CancellationToken cancellationToken)
     {
         var currencyCode = (CurrencyCode)сurrencyCodeFromRequest;
@@ -48,6 +56,15 @@ public class CurrencyClient
         };
     }
 
+    /// <summary>
+    /// Получает обменный курс для указанной валюты относительно базовой валюты на заданную дату асинхронно.
+    /// </summary>
+    /// <param name="сurrencyCodeFromRequest">Код валюты для запроса обменного курса.</param>
+    /// <param name="baseCurrencyFromRequest">Код базовой валюты для запроса обменного курса.</param>
+    /// <param name="date">Дата, на которую нужно получить обменный курс.</param>
+    /// <param name="cancellationToken">Токен отмены, который позволяет отменить выполнение операции.</param>
+    /// <returns>Объект <see cref="CurrencyExchangeRateOnDate"/>, содержащий валютный код, курс обмена и дату.</returns>
+    /// <exception cref="CurrencyNotFoundException">Бросается, если указанный код валюты или базовой валюты не существует.</exception>
     public async Task<CurrencyExchangeRateOnDate> GetCurrencyOnDateAsync(CurrencyCodeDTO сurrencyCodeFromRequest, CurrencyCodeDTO baseCurrencyFromRequest, DateOnly date, CancellationToken cancellationToken)
     {
 
@@ -79,6 +96,11 @@ public class CurrencyClient
         };
     }
 
+    /// <summary>
+    /// Получает настройки из удаленного API асинхронно.
+    /// </summary>
+    /// <param name="cancellationToken">Токен отмены, который позволяет отменить выполнение операции.</param>
+    /// <returns>Объект <see cref="Settings"/>, содержащий настройки, полученные из удаленного API.</returns>
     public async Task<Settings> GetSettingAsync(CancellationToken cancellationToken)
     {
 
