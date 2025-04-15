@@ -17,7 +17,7 @@ var webHost = Host.CreateDefaultBuilder(args)
 
                 options.ConfigureEndpointDefaults(p =>
                 {
-                    p.Protocols = p.IPEndPoint!.Port == ports.gRPC
+                    p.Protocols = p.IPEndPoint!.Port == ports!.gRPC
                                 ? HttpProtocols.Http2
                                 : HttpProtocols.Http1;
                 });

@@ -38,7 +38,7 @@ public class CashedCurrency_DB : ICachedCurrencyAPI
             freshCache = await _currencyCacheRepository.CreateCacheAsync(CACHE_BASE, DateTime.UtcNow, currencies, cancellationToken);
         }
 
-        exchangeRate = freshCache?.ExchangeRates.FirstOrDefault(er => er.CurrencyCode == currencyType);
+        exchangeRate = freshCache!.ExchangeRates!.FirstOrDefault(er => er.CurrencyCode == currencyType);
 
 
         if (exchangeRate == null)
@@ -48,7 +48,7 @@ public class CashedCurrency_DB : ICachedCurrencyAPI
 
         return new CurrencyExchangeRate
         {
-            CurrencyCode = exchangeRate.CurrencyCode,
+            CurrencyCode = exchangeRate!.CurrencyCode,
             Value = exchangeRate.ExchangeRate
         };
     }
@@ -70,7 +70,7 @@ public class CashedCurrency_DB : ICachedCurrencyAPI
             freshCache = await _currencyCacheRepository.CreateCacheAsync(CACHE_BASE, currencies.LastUpdatedAt, currencies.Currencies, cancellationToken);
         }
 
-        exchangeRate = freshCache?.ExchangeRates.FirstOrDefault(er => er.CurrencyCode == currencyType);
+        exchangeRate = freshCache!.ExchangeRates.FirstOrDefault(er => er.CurrencyCode == currencyType);
 
 
         if (exchangeRate == null)
@@ -80,7 +80,7 @@ public class CashedCurrency_DB : ICachedCurrencyAPI
 
         return new CurrencyExchangeRate
         {
-            CurrencyCode = exchangeRate.CurrencyCode,
+            CurrencyCode = exchangeRate!.CurrencyCode,
             Value = exchangeRate.ExchangeRate
         };
     }

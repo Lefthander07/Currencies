@@ -9,7 +9,7 @@ public class CurrencyCache
     /// <summary>
     /// Базовая валюта, относительно которой строится кэш
     /// </summary>
-    public string BaseCurrency { get; set; }
+    public string? BaseCurrency { get; set; }
 
     /// <summary>
     /// Дата актуальности кэша
@@ -21,5 +21,5 @@ public class CurrencyCache
     /// <summary>
     /// Коллекция курсов влают
     /// </summary>
-    public ICollection<CurrencyExchange> ExchangeRates { get; set; }
+    public ICollection<CurrencyExchange>? ExchangeRates { get; set; }
 }
