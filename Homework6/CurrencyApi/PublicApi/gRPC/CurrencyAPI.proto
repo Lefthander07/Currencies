@@ -1,0 +1,50 @@
+﻿syntax = "proto3";
+option csharp_namespace = "Fuse8.BackendIntership.PublicApi.GrpcContracts";
+package currency;
+import "google/protobuf/empty.proto";
+
+// Сервис для работы с курсами валют.
+service GrpcCurrency {
+  // Получает текущий курс валюты по коду.
+  rpc GetCurrencyCurrent (LatestCurrencyRequest) returns (CurrencyRate);
+  
+  // Получает курс валюты на указанную дату.
+  rpc GetCurrencyOnDate (HistoricalCurrencyRequest) returns (CurrencyRate);
+  
+  // Получает настройки API, включая базовую валюту и доступность запросов.
+  rpc GetSetting (google.protobuf.Empty) returns (Settings);
+}
+
+// Запрос для получения текущего курса валюты.
+message LatestCurrencyRequest {
+  // Код валюты (например, "USD", "EUR").
+  string currency_code = 1;
+  
+  string base_currency = 2;
+}
+
+// Запрос для получения курса валюты на указанную дату.
+message HistoricalCurrencyRequest {
+  // Код валюты (например, "USD", "EUR").
+  string currency_code = 1;
+
+  string base_currency = 2;
+  
+  // Дата запроса курса в формате yyyy-MM-dd.
+  string date = 3;
+}
+
+// Ответ, содержащий курс валюты.
+message CurrencyRate {
+  // Код валюты (например, "USD", "EUR").
+  string currency_code = 1;
+  
+  // Значение обменного курса.
+  double value = 2;
+}
+
+// Настройки API.
+message Settings {
+  // Флаг, указывающий, доступны ли еще запросы к API.
+  bool requests_available = 1;
+}
