@@ -11,7 +11,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Fuse8.BackendInternship.PublicApi.Migrations
 {
     [DbContext(typeof(SelectedCurrenciesDbContext))]
-    [Migration("20250409094658_user")]
+    [Migration("20250415070736_user")]
     partial class user
     {
         /// <inheritdoc />

@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Fuse8.BackendInternship.InternalApi.Migrations
 {
     [DbContext(typeof(CurrencyDbContext))]
-    [Migration("20250413092741_cur")]
+    [Migration("20250415071204_cur")]
     partial class cur
     {
         /// <inheritdoc />

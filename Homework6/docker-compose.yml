@@ -31,12 +31,10 @@ services:
        context: ./CurrencyApi
        dockerfile: ./InternalApi/Dockerfile
     healthcheck:
-       test: ["CMD", "curl", "--fail", "http://localhost:80/healthcheck"]
+       test: ["CMD", "curl", "--fail", "http://localhost:${INTERNAL_API_PORT_REST}/healthcheck"]
        interval: 10s
        timeout: 5s
        retries: 5
-
-
 
   publicapi:
     container_name: ${PUBLIC_API_CONTAINER_NAME}
@@ -52,7 +50,7 @@ services:
        context: ./CurrencyApi
        dockerfile: ./PublicApi/Dockerfile
     healthcheck:
-       test: ["CMD", "curl", "--fail", "http://localhost:82/healthcheck"]
+       test: ["CMD", "curl", "--fail", "http://localhost:${PUBLIC_API_PORT_REST}/healthcheck"]
        interval: 10s
        timeout: 5s
        retries: 5
