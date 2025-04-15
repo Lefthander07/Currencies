@@ -8,14 +8,11 @@ namespace Fuse8.BackendInternship.PublicApi.Models.Responses;
 public record SettingResponse
 {
     [JsonPropertyName("defaultCurrency")]
-    public required string DefaultCurrency { get; init; } // Валюта по умолчанию
-
-    [JsonPropertyName("baseCurrency")]
-    public required string BaseCurrency { get; init; } // Базовая валюта
+    public required string DefaultCurrency { get; init; }
 
     [JsonPropertyName("newRequestsAvailable")]
-    public required bool NewRequestsAvailable { get; init; } // Доступность новых запросов
+    public required bool NewRequestsAvailable { get; init; } 
 
     [JsonPropertyName("currencyRoundCount")]
-    public required int CurrencyRoundCount { get; init; } // Количество знаков после запятой
+    public required int CurrencyRoundCount { get; init; }
 }

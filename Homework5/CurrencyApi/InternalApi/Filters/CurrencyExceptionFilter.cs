@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc;
 using Fuse8.BackendInternship.InternalApi.Exceptions;
-using System.Net;
+
 public class CurrencyExceptionFilter : IExceptionFilter
 {
     private readonly ILogger<CurrencyExceptionFilter> _logger;
@@ -13,6 +13,7 @@ public class CurrencyExceptionFilter : IExceptionFilter
 
     public void OnException(ExceptionContext context)
     {
+        
         switch (context.Exception)
         {
             case ApiRequestLimitException ex:
@@ -25,8 +26,8 @@ public class CurrencyExceptionFilter : IExceptionFilter
                 setResponse(ex.Message, StatusCodes.Status404NotFound);
                 break;
             default:
-                _logger.LogError(context.Exception, "An unexpected error occurred");
-                setResponse("An unexpected error occurred", StatusCodes.Status500InternalServerError);
+                _logger.LogError(context.Exception, context.Exception.Message);
+                setResponse(context.Exception.Message, StatusCodes.Status500InternalServerError);
                 break;
         }
 

@@ -44,7 +44,6 @@ public class Settings : ControllerBase
         return new SettingResponse
         {
             DefaultCurrency = _configuration.DefaultCurrency,  
-            BaseCurrency = status.BaseCurrency,
             NewRequestsAvailable = status.RequestsAvailable,
             CurrencyRoundCount = _configuration.CurrencyRoundCount 
         };

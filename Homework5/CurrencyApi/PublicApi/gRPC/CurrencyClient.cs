@@ -3,7 +3,6 @@ using Fuse8.BackendInternship.PublicApi.Models.Core;
 using Fuse8.BackendIntership.PublicApi.GrpcContracts;
 using Google.Protobuf.WellKnownTypes;
 using Microsoft.Extensions.Options;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Fuse8.BackendInternship.PublicApi.gRPC;
 
@@ -16,9 +15,13 @@ public class CurrencyClient
         _grpcCurrencyClient = grpcCurrencyClient;
     }
 
-    public async Task<CurrencyExchangeRate> GetCurrencyCurrentAsync(string CurrencyCode, CancellationToken cancellationToken)
+    public async Task<CurrencyExchangeRate> GetCurrencyCurrentAsync(string CurrencyCode, string BaseCurrency, CancellationToken cancellationToken)
     {
-        var request = new LatestCurrencyRequest { CurrencyCode = CurrencyCode };
+        var request = new LatestCurrencyRequest
+        {
+            CurrencyCode = CurrencyCode,
+            BaseCurrency = BaseCurrency        
+        };
         var response = await _grpcCurrencyClient.GetCurrencyCurrentAsync(request);
         return new CurrencyExchangeRate
         {
@@ -27,12 +30,13 @@ public class CurrencyClient
         };
     }
 
-    public async Task<CurrencyExchangeRateOnDate> GetCurrencyOnDateAsync(string CurrencyCode, DateOnly date, CancellationToken cancellationToken)
+    public async Task<CurrencyExchangeRateOnDate> GetCurrencyOnDateAsync(string CurrencyCode, string BaseCurrency, DateOnly date, CancellationToken cancellationToken)
     {
 
         var request = new HistoricalCurrencyRequest
         {
             CurrencyCode = CurrencyCode,
+            BaseCurrency = BaseCurrency,
             Date = date.ToString("yyyy-MM-dd")
         };
 

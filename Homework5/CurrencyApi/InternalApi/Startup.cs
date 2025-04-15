@@ -9,6 +9,10 @@ using Fuse8.BackendInternship.InternalApi.gRPC;
 using Fuse8.BackendInternship.InternalApi.Contracts;
 using Fuse8.BackendInternship.InternalApi.ModelBinders;
 using Fuse8.BackendInternship.InternalApi.JsonConverters;
+using Fuse8.BackendInternship.InternalApi.Data;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.Extensions.Options;
 
 namespace Fuse8.BackendInternship.InternalApi;
 
@@ -25,7 +29,7 @@ public class Startup
     {
         services.AddGrpc(options =>
         {
-            options.EnableDetailedErrors = true; 
+            options.EnableDetailedErrors = true;
         });
 
         services.AddControllers(options =>
@@ -133,8 +137,23 @@ public class Startup
                 }
             }
         }
-
-        services.AddScoped<ICachedCurrencyAPI, CashedCurrency>();
+        services.AddDbContext<CurrencyDbContext>(
+            optionsBuilder =>
+            {
+                optionsBuilder
+                .UseNpgsql(
+                    connectionString: _configuration.GetConnectionString("CurrencyCache"),
+                    npgsqlOptionsAction: sqlOptionBuilder =>
+                    {
+                        sqlOptionBuilder.EnableRetryOnFailure();
+                        sqlOptionBuilder.MigrationsHistoryTable(HistoryRepository.DefaultTableName, "cur");
+                    })
+                .UseSnakeCaseNamingConvention();
+                optionsBuilder.EnableSensitiveDataLogging().LogTo(Console.WriteLine);
+            }
+        );
+            
+        services.AddScoped<ICachedCurrencyAPI, CashedCurrency_DB>();
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

@@ -9,7 +9,11 @@ using Fuse8.BackendInternship.PublicApi.Models.Configurations;
 using Fuse8.BackendIntership.PublicApi.GrpcContracts;
 using Fuse8.BackendInternship.PublicApi.gRPC;
 using Microsoft.Extensions.Options;
-
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Fuse8.BackendInternship.PublicApi.Data;
+using Fuse8.BackendInternship.PublicApi.Services;
+using Microsoft.Extensions.DependencyInjection;
 namespace Fuse8.BackendInternship.PublicApi;
 
 public class Startup
@@ -32,11 +36,6 @@ public class Startup
         {
             options.JsonSerializerOptions.Converters.Add(new DateOnlyJsonConverter());
         });
-
-        services.AddOptions<CurrencyHttpApiSettings>()
-            .Bind(_configuration.GetSection("CurrencyHttpApi"))
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
 
 		services.AddOptions<CurrencySettigns>()
 			.Bind(_configuration.GetSection("Currency"))
@@ -91,15 +90,35 @@ public class Startup
 					});
 				с.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, $"{typeof(Program).Assembly.GetName().Name}.xml"), true);
 			});
-	}
+
+        services.AddDbContext<FavoritesCurrenciesDbContext>(
+            optionsBuilder =>
+            {
+                optionsBuilder
+                .UseNpgsql(
+                    connectionString: _configuration.GetConnectionString("CurrencyCache"),
+                    npgsqlOptionsAction: sqlOptionBuilder =>
+                    {
+                        sqlOptionBuilder.EnableRetryOnFailure();
+                        sqlOptionBuilder.MigrationsHistoryTable(HistoryRepository.DefaultTableName, "user");
+                    })
+                .UseSnakeCaseNamingConvention();
+                optionsBuilder.EnableSensitiveDataLogging().LogTo(Console.WriteLine);
+            });
+         services.AddScoped<SelectedExchangeRatesService>();
+    }
 
 	public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
 	{
 		if (env.IsDevelopment())
 		{
-			app.UseSwagger();
-			app.UseSwaggerUI();
-		}
+            app.UseSwagger();
+            app.UseSwaggerUI(options =>
+            {
+                options.SwaggerEndpoint("/swagger/v1/swagger.json", "Currency Public API v1");
+                options.RoutePrefix = "";
+            });
+        }
 
         app.UseRouting()
 			.UseMiddleware<RequestLoggingMiddleware>()

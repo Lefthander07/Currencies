@@ -19,15 +19,19 @@ service GrpcCurrency {
 message LatestCurrencyRequest {
   // Код валюты (например, "USD", "EUR").
   string currency_code = 1;
+  
+  string base_currency = 2;
 }
 
 // Запрос для получения курса валюты на указанную дату.
 message HistoricalCurrencyRequest {
   // Код валюты (например, "USD", "EUR").
   string currency_code = 1;
+
+  string base_currency = 2;
   
   // Дата запроса курса в формате yyyy-MM-dd.
-  string date = 2;
+  string date = 3;
 }
 
 // Ответ, содержащий курс валюты.
@@ -41,9 +45,6 @@ message CurrencyRate {
 
 // Настройки API.
 message Settings {
-  // Базовая валюта API (например, "USD").
-  string base_currency = 1;
-  
   // Флаг, указывающий, доступны ли еще запросы к API.
-  bool requests_available = 2;
+  bool requests_available = 1;
 }

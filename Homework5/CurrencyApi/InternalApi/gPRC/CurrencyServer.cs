@@ -1,9 +1,11 @@
-﻿using Fuse8.BackendInternship.InternalApi.Configurations;
+﻿using Fuse8.BackendInternship.InternalApi.ApiModels;
+using Fuse8.BackendInternship.InternalApi.Configurations;
 using Fuse8.BackendInternship.InternalApi.Contracts;
 using Fuse8.BackendIntership.InternalApi.GrpcContracts;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Microsoft.Extensions.Options;
+using System.Runtime.CompilerServices;
 
 namespace Fuse8.BackendInternship.InternalApi.gRPC;
 public class CurrencyService : GrpcCurrency.GrpcCurrencyBase
@@ -21,15 +23,25 @@ public class CurrencyService : GrpcCurrency.GrpcCurrencyBase
 
     public override async Task<CurrencyRate> GetCurrencyCurrent(LatestCurrencyRequest request, ServerCallContext context)
     {
-       var response = await _currencyApi.GetCurrentCurrencyAsync(request.CurrencyCode, context.CancellationToken);
-        return new CurrencyRate { CurrencyCode = response.CurrencyCode,
+       var defaultCurrency = await _currencyApi.GetCurrentCurrencyAsync(request.CurrencyCode, context.CancellationToken);
+       var baseCurrency = await _currencyApi.GetCurrentCurrencyAsync(request.BaseCurrency, context.CancellationToken);
+
+        var response = GetExchangeRateRelativeToEachOther(defaultCurrency, baseCurrency);
+
+        return new CurrencyRate
+        {
+            CurrencyCode = response.CurrencyCode,
             Value = (double)response.Value
         };
     }
 
     public override async Task<CurrencyRate> GetCurrencyOnDate(HistoricalCurrencyRequest request, ServerCallContext context)
     {
-        var response = await _currencyApi.GetCurrencyOnDateAsync(request.CurrencyCode, DateOnly.ParseExact(request.Date, "yyyy-MM-dd"), context.CancellationToken);
+        var defaultCurrency = await _currencyApi.GetCurrencyOnDateAsync(request.CurrencyCode, DateOnly.ParseExact(request.Date, "yyyy-MM-dd"), context.CancellationToken);
+        var baseCurrency = await _currencyApi.GetCurrencyOnDateAsync(request.BaseCurrency, DateOnly.ParseExact(request.Date, "yyyy-MM-dd"), context.CancellationToken);
+        
+        var response = GetExchangeRateRelativeToEachOther(defaultCurrency, baseCurrency);
+
         return new CurrencyRate
         {
             CurrencyCode = response.CurrencyCode,
@@ -43,8 +55,14 @@ public class CurrencyService : GrpcCurrency.GrpcCurrencyBase
 
         return new Settings
         {
-            BaseCurrency = _configuration.BaseCurrency,
             RequestsAvailable = response
         };
+    }
+
+    private CurrencyExchangeRate GetExchangeRateRelativeToEachOther(CurrencyExchangeRate defaultCurrency, CurrencyExchangeRate baseCurrency)
+    {
+        return new CurrencyExchangeRate
+        { CurrencyCode = defaultCurrency.CurrencyCode,
+        Value = defaultCurrency.Value / baseCurrency.Value };
     }
 }
