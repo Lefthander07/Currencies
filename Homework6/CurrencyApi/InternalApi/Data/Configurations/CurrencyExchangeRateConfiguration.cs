@@ -8,7 +8,7 @@ namespace Fuse8.BackendInternship.InternalApi.Data.Configurations
         public void Configure(EntityTypeBuilder<CurrencyExchange> builder)
         {
             builder.HasKey(p => p.Id);
-            builder.Property(p => p.CurrencyCode).IsRequired();
+            builder.Property(p => p.CurrencyCode).HasMaxLength(5);
             builder.Property(p => p.ExchangeRate).IsRequired();
 
             builder

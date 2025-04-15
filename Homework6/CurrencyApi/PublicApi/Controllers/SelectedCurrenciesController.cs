@@ -20,7 +20,6 @@ public class SelectedCurrenciesController : ControllerBase
             _service = service;
     }
 
-
     /// <summary>
     /// Получить список всех избранных валют пар.
     /// </summary>
@@ -37,12 +36,7 @@ public class SelectedCurrenciesController : ControllerBase
 
         return new AllSelectedCurrencies
         {
-            SelectedCurrenciesArr = repsonse.Select(p => new SelectedCurrencies
-            {
-                BaseCurrency = p.BaseCurrency,
-                CurrencyCode = p.CurrencyCode,
-                Name = p.Name
-            }).ToArray()
+            SelectedCurrencies = repsonse.Select(p => new SelectedCurrencies(p)).ToArray()
         };
     }
 
@@ -61,12 +55,7 @@ public class SelectedCurrenciesController : ControllerBase
     {
         var repsonse = await _service.GetByNameAsync(name, cancellationToken);
 
-        return new SelectedCurrencies
-        { 
-            BaseCurrency = repsonse.BaseCurrency,
-            CurrencyCode = repsonse.CurrencyCode,
-            Name = name
-        };
+        return new SelectedCurrencies(repsonse);
     }
 
     /// <summary>
@@ -89,12 +78,7 @@ public class SelectedCurrenciesController : ControllerBase
                                                        request.Name,
                                                        cancellationToken);
 
-        return new SelectedCurrencies
-        {
-            CurrencyCode = response.CurrencyCode,
-            BaseCurrency = response.BaseCurrency,
-            Name = response.Name
-        };
+        return new SelectedCurrencies(response);
     }
 
     /// <summary>

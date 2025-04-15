@@ -2,20 +2,19 @@
 using Audit.Core;
 using Microsoft.OpenApi.Models;
 using Serilog;
-using Fuse8.BackendInternship.PublicApi.ModelBinders;
+using Fuse8.BackendInternship.ModelBinders;
 using Fuse8.BackendInternship.PublicApi.JsonConverters;
 using Fuse8.BackendInternship.PublicApi.Middlewares;
 using Fuse8.BackendInternship.PublicApi.Models.Configurations;
-using Fuse8.BackendIntership.PublicApi.GrpcContracts;
+using Fuse8.BackendInternship.gRPC;
 using Fuse8.BackendInternship.PublicApi.gRPC;
 using Microsoft.Extensions.Options;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Fuse8.BackendInternship.PublicApi.Data;
 using Fuse8.BackendInternship.PublicApi.Services;
-using Microsoft.Extensions.DependencyInjection;
-namespace Fuse8.BackendInternship.PublicApi;
 
+namespace Fuse8.BackendInternship.PublicApi;
 public class Startup
 {
 	private readonly IConfiguration _configuration;
@@ -37,7 +36,7 @@ public class Startup
             options.JsonSerializerOptions.Converters.Add(new DateOnlyJsonConverter());
         });
 
-		services.AddOptions<CurrencySettigns>()
+		services.AddOptions<CurrencyOptions>()
 			.Bind(_configuration.GetSection("Currency"))
 			.ValidateDataAnnotations()
 			.ValidateOnStart();
@@ -91,20 +90,21 @@ public class Startup
 				с.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, $"{typeof(Program).Assembly.GetName().Name}.xml"), true);
 			});
 
-        services.AddDbContext<FavoritesCurrenciesDbContext>(
+        services.AddDbContext<SelectedCurrenciesDbContext>(
             optionsBuilder =>
             {
                 optionsBuilder
                 .UseNpgsql(
-                    connectionString: _configuration.GetConnectionString("CurrencyCache"),
+                    connectionString: _configuration.GetConnectionString("SelectedCurrency"),
                     npgsqlOptionsAction: sqlOptionBuilder =>
                     {
                         sqlOptionBuilder.EnableRetryOnFailure();
-                        sqlOptionBuilder.MigrationsHistoryTable(HistoryRepository.DefaultTableName, "user");
+                        sqlOptionBuilder.MigrationsHistoryTable(HistoryRepository.DefaultTableName, SelectedCurrenciesDbContext.SchemaName);
                     })
                 .UseSnakeCaseNamingConvention();
                 optionsBuilder.EnableSensitiveDataLogging().LogTo(Console.WriteLine);
             });
+         services.AddScoped<SelectedCurrenciesRepository>();
          services.AddScoped<SelectedExchangeRatesService>();
     }
 

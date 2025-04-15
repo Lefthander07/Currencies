@@ -2,6 +2,7 @@
 using Fuse8.BackendInternship.PublicApi.Models.Responses;
 using Microsoft.AspNetCore.Mvc;
 using Fuse8.BackendInternship.PublicApi.Services;
+using Fuse8.BackendInternship.PublicApi.Models.Core;
 
 namespace Fuse8.BackendInternship.PublicApi.Controllers;
 
@@ -36,7 +37,11 @@ public class SelectedRateController : ControllerBase
     public async Task<CurrencyCurrentResponse> GetSelectedRateLatest([FromRoute] string name, CancellationToken cancellationToken)
     {
         var selected = await _service.GetByNameAsync(name, cancellationToken);
-        var response = await _currencyClient.GetCurrencyCurrentAsync(selected.CurrencyCode, selected.BaseCurrency, cancellationToken);
+
+        CurrencyCodeDTO currencyCode = (CurrencyCodeDTO)Enum.Parse(typeof(CurrencyCodeDTO), selected.CurrencyCode);
+        CurrencyCodeDTO baseCurrency = (CurrencyCodeDTO)Enum.Parse(typeof(CurrencyCodeDTO), selected.BaseCurrency);
+
+        var response = await _currencyClient.GetCurrencyCurrentAsync(currencyCode, baseCurrency, cancellationToken);
 
         return new CurrencyCurrentResponse
         {
@@ -61,7 +66,11 @@ public class SelectedRateController : ControllerBase
     public async Task<CurrencyCurrentResponse> GetSelectedRateHistorical([FromRoute] string name, [FromRoute] DateOnly date, CancellationToken cancellationToken)
     {
         var selected = await _service.GetByNameAsync(name, cancellationToken);
-        var response = await _currencyClient.GetCurrencyOnDateAsync(selected.CurrencyCode, selected.BaseCurrency, date, cancellationToken);
+
+        CurrencyCodeDTO currencyCode = (CurrencyCodeDTO)Enum.Parse(typeof(CurrencyCodeDTO), selected.CurrencyCode);
+        CurrencyCodeDTO baseCurrency = (CurrencyCodeDTO)Enum.Parse(typeof(CurrencyCodeDTO), selected.BaseCurrency);
+
+        var response = await _currencyClient.GetCurrencyOnDateAsync(currencyCode, baseCurrency, date, cancellationToken);
         return new CurrencyCurrentResponse
         {
             Code = response.CurrencyCode,

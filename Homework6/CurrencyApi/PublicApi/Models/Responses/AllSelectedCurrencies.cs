@@ -1,4 +1,6 @@
-﻿namespace Fuse8.BackendInternship.PublicApi.Models.Responses;
+﻿using System.Text.Json.Serialization;
+
+namespace Fuse8.BackendInternship.PublicApi.Models.Responses;
 
 /// <summary>
 /// Модель ответа, содержащая массив всех избранных валют.
@@ -8,6 +10,7 @@ public class AllSelectedCurrencies
     /// <summary>
     /// Массив всех избранных валют, добавленных пользователем.
     /// </summary>
-    public required SelectedCurrencies[] SelectedCurrenciesArr { get; set; }
+    [JsonPropertyName("selected_currencies")]
+    public required SelectedCurrencies[] SelectedCurrencies { get; set; }
 }
 

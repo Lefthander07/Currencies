@@ -14,14 +14,14 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers;
 public class Settings : ControllerBase
 {
     private readonly CurrencyClient _currencyClient;
-    private readonly CurrencySettigns _configuration;
+    private readonly CurrencyOptions _configuration;
 
     /// <summary>
     /// Конструктор для инъекции зависимостей.
     /// </summary>
     /// <param name="currencyClient">Сервис для получения данных о курсах валют.</param>
     /// <param name="configuration">Настройки приложения.</param>
-    public Settings(CurrencyClient currencyClient, IOptionsSnapshot<CurrencySettigns> configuration)
+    public Settings(CurrencyClient currencyClient, IOptionsSnapshot<CurrencyOptions> configuration)
     {
         _currencyClient = currencyClient;
         _configuration = configuration.Value;
@@ -43,7 +43,7 @@ public class Settings : ControllerBase
 
         return new SettingResponse
         {
-            DefaultCurrency = _configuration.DefaultCurrency,  
+            DefaultCurrency = _configuration.DefaultCurrency.ToString(),  
             NewRequestsAvailable = status.RequestsAvailable,
             CurrencyRoundCount = _configuration.CurrencyRoundCount 
         };

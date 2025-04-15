@@ -1,6 +1,7 @@
 ﻿using Fuse8.BackendInternship.InternalApi.Configurations;
 using Fuse8.BackendInternship.InternalApi.Contracts;
 using Fuse8.BackendInternship.InternalApi.Exceptions;
+using Fuse8.BackendInternship.Exceptions;
 using Fuse8.BackendInternship.InternalApi.ApiModels;
 using Microsoft.Extensions.Options;
 
@@ -8,7 +9,6 @@ using Microsoft.Extensions.Options;
 public sealed class CurrencyHttpApi : ICurrencyAPI
 {
     public const string AuthorizationHeaderName = "apikey";
-    private const string CurrenciesQueryKey = "currencies";
     private readonly HttpClient _httpClient;
 
     public CurrencyHttpApi(HttpClient httpClient, IOptionsSnapshot<CurrencyHttpApiOptions> apiSettingsSnapshot)

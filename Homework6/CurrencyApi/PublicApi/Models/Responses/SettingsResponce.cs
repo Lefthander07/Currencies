@@ -7,12 +7,12 @@ namespace Fuse8.BackendInternship.PublicApi.Models.Responses;
 /// </summary>
 public record SettingResponse
 {
-    [JsonPropertyName("defaultCurrency")]
+    [JsonPropertyName("default_currency")]
     public required string DefaultCurrency { get; init; }
 
-    [JsonPropertyName("newRequestsAvailable")]
+    [JsonPropertyName("new_requests_available")]
     public required bool NewRequestsAvailable { get; init; } 
 
-    [JsonPropertyName("currencyRoundCount")]
+    [JsonPropertyName("currency_round_count")]
     public required int CurrencyRoundCount { get; init; }
 }

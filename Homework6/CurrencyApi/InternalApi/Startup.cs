@@ -7,12 +7,11 @@ using Audit.Http;
 using Audit.Core;
 using Fuse8.BackendInternship.InternalApi.gRPC;
 using Fuse8.BackendInternship.InternalApi.Contracts;
-using Fuse8.BackendInternship.InternalApi.ModelBinders;
+using Fuse8.BackendInternship.ModelBinders;
 using Fuse8.BackendInternship.InternalApi.JsonConverters;
 using Fuse8.BackendInternship.InternalApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
-using Microsoft.Extensions.Options;
 
 namespace Fuse8.BackendInternship.InternalApi;
 
@@ -146,28 +145,19 @@ public class Startup
                     npgsqlOptionsAction: sqlOptionBuilder =>
                     {
                         sqlOptionBuilder.EnableRetryOnFailure();
-                        sqlOptionBuilder.MigrationsHistoryTable(HistoryRepository.DefaultTableName, "cur");
+                        sqlOptionBuilder.MigrationsHistoryTable(HistoryRepository.DefaultTableName, CurrencyDbContext.SchemaName);
                     })
                 .UseSnakeCaseNamingConvention();
                 optionsBuilder.EnableSensitiveDataLogging().LogTo(Console.WriteLine);
             }
         );
-            
+
+        services.AddScoped<CurrencyCacheRepository>();
         services.AddScoped<ICachedCurrencyAPI, CashedCurrency_DB>();
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
-        if (env.IsDevelopment())
-        {
-            app.UseSwagger();
-            app.UseSwaggerUI(options =>
-            {
-                options.SwaggerEndpoint("/swagger/v1/swagger.json", "Currency Internal API v1");
-                options.RoutePrefix = "";
-            });
-        }
-
         var RESTport = _configuration.GetValue<int>("Ports:REST");
         var GRPCport = _configuration.GetValue<int>("Ports:GRPC");
 
@@ -183,6 +173,15 @@ public class Startup
             predicate: context => context.Connection.LocalPort == RESTport,
             configuration: restBuilder =>
             {
+                if (env.IsDevelopment())
+                {
+                    restBuilder.UseSwagger();
+                    restBuilder.UseSwaggerUI(options =>
+                    {
+                        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Currency Internal API v1");
+                        options.RoutePrefix = "";
+                    });
+                }
                 restBuilder.UseRouting();
                 restBuilder.UseMiddleware<RequestLoggingMiddleware>();
                 restBuilder.UseEndpoints(endpoints => endpoints.MapControllers());

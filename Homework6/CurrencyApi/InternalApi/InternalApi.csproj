@@ -10,9 +10,21 @@
 </PropertyGroup>
 
 <ItemGroup>
-  <Protobuf Include="gPRC\CurrencyAPI.proto" GrpcSevices="Server" />
+  <Compile Include="..\Exceptions\ApiRequestLimitException.cs" Link="Exceptions\ApiRequestLimitException.cs" />
+  <Compile Include="..\Exceptions\CurrencyNotFoundException.cs" Link="Exceptions\CurrencyNotFoundException.cs" />
+  <Compile Include="..\Extensions\CurrencyCodeEnumExtensions.cs" Link="Extensions\CurrencyCodeEnumExtensions.cs" />
+  <Compile Include="..\GrpcCommon\CustomTypes\DecimalValue.cs" Link="gPRC\DecimalValue.cs" />
+  <Compile Include="..\ModelBinders\DateOnlyModelBinder.cs" Link="ModelBinders\DateOnlyModelBinder.cs" />
+  <Compile Include="..\ModelBinders\DateOnlyModelBinderProvider.cs" Link="ModelBinders\DateOnlyModelBinderProvider.cs" />
 </ItemGroup>
 
+	<ItemGroup>
+		<Protobuf Include="..\GrpcCommon\Protos\DecimalValue.proto" Link="gPRC\DecimalValue.proto" GrpcServices="None" />
+		<Protobuf Include="..\GrpcCommon\Protos\CurrencyAPI.proto" Link="gPRC\CurrencyAPI.proto" GrpcServices="Server" />
+	</ItemGroup>
+	
+	
+	
   <ItemGroup>
     <PackageReference Include="Audit.HttpClient" Version="27.5.0" />
     <PackageReference Include="Audit.NET.Serilog" Version="27.5.0" />
@@ -41,6 +53,7 @@
 
   <ItemGroup>
     <Folder Include="ModelBinders\" />
+    <Folder Include="Extensions\" />
   </ItemGroup>
 
 </Project>

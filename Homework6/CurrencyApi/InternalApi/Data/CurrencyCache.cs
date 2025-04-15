@@ -18,5 +18,8 @@ public class CurrencyCache
     /// </summary>
     public DateTime CacheDate { get; set; }
 
+    /// <summary>
+    /// Коллекция курсов влают
+    /// </summary>
     public ICollection<CurrencyExchange> ExchangeRates { get; set; }
 }

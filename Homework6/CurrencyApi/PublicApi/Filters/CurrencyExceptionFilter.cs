@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc;
-using Fuse8.BackendInternship.PublicApi.Exceptions;
+using Fuse8.BackendInternship.Exceptions;
 public class CurrencyExceptionFilter : IExceptionFilter
 {
     private readonly ILogger<CurrencyExceptionFilter> _logger;

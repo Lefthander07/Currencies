@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
-namespace Fuse8.BackendInternship.InternalApi.ModelBinders;
+namespace Fuse8.BackendInternship.ModelBinders;
 
 public class DateOnlyModelBinderProvider : IModelBinderProvider
 {
