@@ -30,6 +30,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Exceptions", "Exceptions", 
 		Exceptions\CurrencyNotFoundException.cs = Exceptions\CurrencyNotFoundException.cs
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docker", "docker", "{283C8DA0-3A20-470A-93AA-EF6E06B000B9}"
+	ProjectSection(SolutionItems) = preProject
+		docker\.env = docker\.env
+		docker\docker-compose.yml = docker\docker-compose.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
