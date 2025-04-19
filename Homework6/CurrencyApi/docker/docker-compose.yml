@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres:
     container_name: ${POSTGRES_CONTAINER_NAME}
@@ -28,7 +26,7 @@ services:
      - Ports__REST=${INTERNAL_API_PORT_REST}
      - Ports__GRPC=${INTERNAL_API_PORT_GRPC}
     build:
-       context: ./CurrencyApi
+       context: ..
        dockerfile: ./InternalApi/Dockerfile
     healthcheck:
        test: ["CMD", "curl", "--fail", "http://localhost:${INTERNAL_API_PORT_REST}/healthcheck"]
@@ -47,7 +45,7 @@ services:
      - ASPNETCORE_ENVIRONMENT=${PUBLIC_API_ENV}
      - GRPC__Url=${GRPC_INTERNAL_API_URL}
     build:
-       context: ./CurrencyApi
+       context: ..
        dockerfile: ./PublicApi/Dockerfile
     healthcheck:
        test: ["CMD", "curl", "--fail", "http://localhost:${PUBLIC_API_PORT_REST}/healthcheck"]
