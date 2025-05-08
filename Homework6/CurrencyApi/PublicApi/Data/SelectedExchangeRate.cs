@@ -1,6 +1,6 @@
 ﻿namespace Fuse8.BackendInternship.PublicApi.Data;
 
-public class SelectedExchangeRates
+public class SelectedExchangeRate
 {
     public int Id { get; set; }
     public string Name { get; set; }

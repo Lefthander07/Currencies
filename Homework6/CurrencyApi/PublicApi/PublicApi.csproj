@@ -10,9 +10,20 @@
     <NoWarn>$(NoWarn);1591</NoWarn>
 </PropertyGroup>
 
+<ItemGroup>
+  <Compile Include="..\Exceptions\ApiRequestLimitException.cs" Link="Exceptions\ApiRequestLimitException.cs" />
+  <Compile Include="..\Exceptions\CurrencyNotFoundException.cs" Link="Exceptions\CurrencyNotFoundException.cs" />
+  <Compile Include="..\Extensions\CurrencyCodeEnumExtensions.cs" Link="Extensions\CurrencyCodeEnumExtensions.cs" />
+  <Compile Include="..\GrpcCommon\CustomTypes\DecimalValue.cs" Link="gRPC\DecimalValue.cs" />
+  <Compile Include="..\ModelBinders\DateOnlyModelBinder.cs" Link="ModelBinders\DateOnlyModelBinder.cs" />
+  <Compile Include="..\ModelBinders\DateOnlyModelBinderProvider.cs" Link="ModelBinders\DateOnlyModelBinderProvider.cs" />
+</ItemGroup>
+
 	<ItemGroup>
-		<Protobuf Include="gRPC\CurrencyAPI.proto" GrpcSevices="Client" GrpcServices="Client" />
+		<Protobuf Include="..\GrpcCommon\Protos\DecimalValue.proto" Link="gRPC\DecimalValue.proto" GrpcServices="None" />
+		<Protobuf Include="..\GrpcCommon\Protos\CurrencyAPI.proto" Link="gRPC\CurrencyAPI.proto" GrpcServices="Client" />
 	</ItemGroup>
+
 	<ItemGroup>
         <PackageReference Include="Audit.HttpClient" Version="27.5.0" />
         <PackageReference Include="Audit.NET" Version="27.5.0" />
@@ -37,6 +48,14 @@
         <PackageReference Include="Swashbuckle.AspNetCore" Version="8.0.0" />
 		<PackageReference Include="Grpc.Core" Version="2.46.6" />
 		<PackageReference Include="Grpc.Core.Api" Version="2.70.0" />
+		<PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="8.1.1" />
+		<PackageReference Include="Swashbuckle.AspNetCore.Filters" Version="8.0.2" />
+		<PackageReference Include="Unchase.Swashbuckle.AspNetCore.Extensions" Version="2.7.2" />
     </ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Extensions\" />
+	  <Folder Include="ModelBinders\" />
+	</ItemGroup>
 
 </Project>

@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
-public class SelectedExchangeRatesConfiguration : IEntityTypeConfiguration<SelectedExchangeRates>
+public class SelectedExchangeRatesConfiguration : IEntityTypeConfiguration<SelectedExchangeRate>
 {
-    public void Configure(EntityTypeBuilder<SelectedExchangeRates> builder)
+    public void Configure(EntityTypeBuilder<SelectedExchangeRate> builder)
     {
         builder.HasKey(p => p.Id);
 
@@ -14,14 +14,11 @@ public class SelectedExchangeRatesConfiguration : IEntityTypeConfiguration<Selec
         builder.HasIndex(p => new {p.CurrencyCode, p.BaseCurrency}).IsUnique();
 
         builder.Property(p => p.CurrencyCode)
-            .IsRequired()
-            .HasMaxLength(3);
+            .HasMaxLength(5);
 
         builder.Property(p => p.BaseCurrency)
-            .IsRequired()
-            .HasMaxLength(3);
+            .HasMaxLength(5);
 
-        builder.Property(p => p.Name)
-            .IsRequired();
+        builder.Property(p => p.Name).HasMaxLength(100);
     }
 }

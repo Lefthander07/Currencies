@@ -1,0 +1,57 @@
+services:
+  postgres:
+    container_name: ${POSTGRES_CONTAINER_NAME}
+    image: postgres:17.4
+    restart: unless-stopped
+    environment:
+      DATABASE_HOST: 127.0.0.1
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "10003:${POSTGRES_PORT}"
+    volumes:
+       - C:/DockerData/postgres/data:/var/lib/postgresql/data
+
+  internalapi:
+    container_name: ${INTERNAL_API_CONTAINER_NAME}
+    restart: unless-stopped
+    ports:
+     - "10001:${INTERNAL_API_PORT_REST}"
+     - "10002:${INTERNAL_API_PORT_GRPC}"
+    environment:
+     - ConnectionStrings__CurrencyCache=${INTERNAL_API_CONNECTION_STRING}
+     - ASPNETCORE_URLS=http://+:${INTERNAL_API_PORT_REST};http://+:${INTERNAL_API_PORT_GRPC}
+     - ASPNETCORE_ENVIRONMENT=${INTERNAL_API_ENV}
+     - Ports__REST=${INTERNAL_API_PORT_REST}
+     - Ports__GRPC=${INTERNAL_API_PORT_GRPC}
+    build:
+       context: ..
+       dockerfile: ./InternalApi/Dockerfile
+    healthcheck:
+       test: ["CMD", "curl", "--fail", "http://localhost:${INTERNAL_API_PORT_REST}/healthcheck"]
+       interval: 10s
+       timeout: 5s
+       retries: 5
+
+  publicapi:
+    container_name: ${PUBLIC_API_CONTAINER_NAME}
+    restart: unless-stopped
+    ports:
+      - "10000:${PUBLIC_API_PORT_REST}"
+    environment:
+     - ASPNETCORE_URLS=http://+:${PUBLIC_API_PORT_REST}
+     - ConnectionStrings__SelectedCurrency=${PUBLIC_API_CONNECTION_STRING}
+     - ASPNETCORE_ENVIRONMENT=${PUBLIC_API_ENV}
+     - GRPC__Url=${GRPC_INTERNAL_API_URL}
+    build:
+       context: ..
+       dockerfile: ./PublicApi/Dockerfile
+    healthcheck:
+       test: ["CMD", "curl", "--fail", "http://localhost:${PUBLIC_API_PORT_REST}/healthcheck"]
+       interval: 10s
+       timeout: 5s
+       retries: 5
+    depends_on:
+       internalapi:
+        condition: service_healthy

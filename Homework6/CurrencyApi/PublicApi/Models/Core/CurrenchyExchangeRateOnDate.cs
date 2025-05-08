@@ -23,6 +23,6 @@ public record CurrencyExchangeRateOnDate
     /// Дата, на которую курс был актуален
     /// </summary>
     [Required]
-    public required string date { get; init; }
+    public required DateOnly date { get; init; }
 }
 

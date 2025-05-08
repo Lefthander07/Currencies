@@ -5,7 +5,7 @@ namespace Fuse8.BackendInternship.PublicApi.Models.Configurations;
 /// <summary>
 /// Модель конфига приложения
 /// </summary>
-public sealed record CurrencyHttpApiSettings
+public sealed record CurrencyHttpApiOptions
 {
     /// <summary>
     /// Авторизационный ключ

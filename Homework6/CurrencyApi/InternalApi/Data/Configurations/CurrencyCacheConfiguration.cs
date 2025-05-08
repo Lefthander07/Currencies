@@ -8,7 +8,6 @@ public class CurrencyCacheConfiguration : IEntityTypeConfiguration<CurrencyCache
     public void Configure(EntityTypeBuilder<CurrencyCache> builder)
     {
         builder.HasKey(p => p.Id);
-        builder.Property(p => p.BaseCurrency).IsRequired();
-        builder.Property(p => p.CacheDate).IsRequired();
+        builder.Property(p => p.BaseCurrency).HasMaxLength(5);
     }
 }

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc;
-using Fuse8.BackendInternship.InternalApi.Exceptions;
+using Fuse8.BackendInternship.Exceptions;
 
 public class CurrencyExceptionFilter : IExceptionFilter
 {
@@ -26,7 +26,7 @@ public class CurrencyExceptionFilter : IExceptionFilter
                 setResponse(ex.Message, StatusCodes.Status404NotFound);
                 break;
             default:
-                _logger.LogError(context.Exception, context.Exception.Message);
+                _logger.LogError(context.Exception, "An unexpected error occurred");
                 setResponse(context.Exception.Message, StatusCodes.Status500InternalServerError);
                 break;
         }

@@ -359,6 +359,5 @@ MigrationBackup/
 # Assets
 dist/
 
-Migrations/
 CurrencyCache/
 appsettings.Development.json

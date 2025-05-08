@@ -1,5 +1,6 @@
 ﻿using Fuse8.BackendInternship.PublicApi.gRPC;
 using Fuse8.BackendInternship.PublicApi.Models.Configurations;
+using Fuse8.BackendInternship.PublicApi.Models.Core;
 using Fuse8.BackendInternship.PublicApi.Models.Responses;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -13,12 +14,12 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
     [Route("currency")]
     public class CurrencyController : ControllerBase
     {
-        private readonly CurrencySettigns _configuration;
+        private readonly CurrencyOptions _configuration;
         private readonly CurrencyClient _currencyClient;
-        private readonly string _defaultCurrency;
-        private readonly string _baseCurrency;
+        private readonly CurrencyCodeDTO _defaultCurrency;
+        private readonly CurrencyCodeDTO _baseCurrency;
 
-        public CurrencyController(CurrencyClient currencyClient, IOptionsSnapshot<CurrencySettigns> configuration)
+        public CurrencyController(CurrencyClient currencyClient, IOptionsSnapshot<CurrencyOptions> configuration)
         {
             _currencyClient = currencyClient;
             _configuration = configuration.Value;
@@ -37,8 +38,6 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<CurrencyCurrentResponse> GetCurrencyRate(CancellationToken cancellationToken)
         {
-            string defaultCurrency = _configuration.DefaultCurrency;
-            string baseCurrency = _configuration.BaseCurrency;
             var response = await _currencyClient.GetCurrencyCurrentAsync(_defaultCurrency, _baseCurrency, cancellationToken);
 
             return new CurrencyCurrentResponse
@@ -59,11 +58,10 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         [HttpGet("{code}")]
         [ProducesResponseType(typeof(CurrencyCurrentResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-        public async Task<CurrencyCurrentResponse> GetCurrencyRateByCodeAsync([FromRoute] string code,
+        public async Task<CurrencyCurrentResponse> GetCurrencyRateByCodeAsync([FromRoute] CurrencyCodeDTO code,
                                                                               CancellationToken cancellationToken)
         {
-            string defaultCurrency = code;
-            var response = await _currencyClient.GetCurrencyCurrentAsync(defaultCurrency, _baseCurrency, cancellationToken);
+            var response = await _currencyClient.GetCurrencyCurrentAsync(code, _baseCurrency, cancellationToken);
 
             return new CurrencyCurrentResponse
             {
@@ -86,15 +84,13 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         [ProducesResponseType(typeof(CurrencyHistoricalResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-        public async Task<CurrencyHistoricalResponse> GetCurrencyRateByDate([FromRoute] string code, 
-                                                                            [FromRoute] DateOnly date, 
+        public async Task<CurrencyHistoricalResponse> GetCurrencyRateByDate([FromRoute] CurrencyCodeDTO code,
+                                                                            [FromRoute] DateOnly date,
                                                                             CancellationToken cancellationToken)
         {
-            string defaultCurrency = code;
-
-            var response = await _currencyClient.GetCurrencyOnDateAsync(defaultCurrency, _baseCurrency, date, cancellationToken);
+            var response = await _currencyClient.GetCurrencyOnDateAsync(code, _baseCurrency, date, cancellationToken);
             int roundDigits = _configuration.CurrencyRoundCount;
-            
+
             return new CurrencyHistoricalResponse
             {
                 Date = date,
